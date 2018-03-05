@@ -1,3 +1,6 @@
 Source gameday batters SQL Update.R
 Source pitchRx SQL Update.R
 Source Statcast SQL Update.R
+Source Hit Tracker Update.R
+Source pitchRx players update.R
+Source Statcast Update.R
