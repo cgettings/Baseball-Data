@@ -1,7 +1,7 @@
 #######################################################-
 #######################################################-
 ##
-## Statcast GAM using 2017 data ----
+## Statcast GAMs using 2017 data ----
 ##
 #######################################################-
 #######################################################-
@@ -35,16 +35,13 @@ library(pROC)
 invlogit <- function(x) exp(x) / (1 + exp(x))
 
 #=============================#
-#### Initilizing Database ####
+# Connecting to Database ----
 #=============================#
 
-# setwd("D:/Files/BASP/R analyses/Baseball Data/Data Files/")
-setwd("~/BASP/R analyses/Baseball Data/Data Files")
-
-statcast_db <- dbConnect(RSQLite::SQLite(), "statcast_db.sqlite3")
+statcast_db <- dbConnect(RSQLite::SQLite(), "./data/statcast_db.sqlite3")
 
 #----------------------------------#
-# ---- Selecting and filtering ----
+# Selecting and filtering ----
 #----------------------------------#
 
 statcast_data <- 
@@ -54,8 +51,12 @@ statcast_data <-
     collect()
 
 #===============================#
-#### basic exploratory plot ####
+# basic exploratory plots ----
 #===============================#
+
+#--------------------------------------------#
+# Speed and angle for different outcomes ----
+#--------------------------------------------#
 
 set.seed(726)
 
@@ -68,9 +69,10 @@ statcast_data %>%
     ggtitle("2000 Balls Put In Play") + 
     scale_color_manual(values = c("blue4", "skyblue")) +
     theme_gray()
-    # theme(plot.title = element_text(hjust = 0.5, size = 18))
 
-#===============================#
+#-----------------------------------------------#
+# Speed distribution for different outcomes ----
+#-----------------------------------------------#
 
 set.seed(726)
 
@@ -90,10 +92,10 @@ statcast_data %>%
     # scale_color_manual(values = c("blue4", "skyblue")) +
     theme_gray() +
     coord_flip()
-    # theme(plot.title = element_text(hjust = 0.5, size = 18))
 
-
-#===============================#
+#-----------------------------------------------#
+# Angle distribution for different outcomes ----
+#-----------------------------------------------#
 
 set.seed(726)
 
@@ -113,32 +115,31 @@ statcast_data %>%
     # scale_color_manual(values = c("blue4", "skyblue")) +
     theme_gray() +
     coord_flip()
-    # theme(plot.title = element_text(hjust = 0.5, size = 18))
-
 
 #=============================#
-#### GAMs ####
+# GAMs ----
 #=============================#
 
-#----------------------------------#
-# ---- Splitting data ----
-#----------------------------------#
+#-------------------------------------------------#
+# Splitting data into training and test sets ----
+#-------------------------------------------------#
 
 set.seed(726)
 
 statcast_data_sample <- sample_frac(statcast_data, 0.5)
 statcast_data_test   <- anti_join(statcast_data, statcast_data_sample)
 
+### Checking the exclusivity of each set ###
+
 # semi_join(statcast_data_sample, statcast_data_test) %>% nrow()
 # semi_join(statcast_data_test, statcast_data_sample) %>% nrow()
 
 
-#----------------------------------#
+#-----------------------------------#
 # ---- Fitting models for angle ----
-#----------------------------------#
+#-----------------------------------#
 
-
-### GLM ----
+#### GLM ----
 
 fit.glm.angle <-
     glm(
@@ -153,7 +154,7 @@ tidy(fit.glm.angle)
 plot(fit.glm.angle)
 
 
-### GAM ----
+#### GAM ----
 
 fit.gam.angle <-
     gam(
@@ -169,9 +170,16 @@ tidy(fit.gam.angle)
 plot(fit.gam.angle)
 
 
-### Comparing ----
+#### Comparing ----
+
+### Not nested, but can still get a sense of relative performance ###
 
 anova(fit.glm.angle, fit.gam.angle, test = "Chisq")
+AIC(fit.glm.angle, fit.gam.angle)
+
+## (the angle-only glm is pretty terrible!)
+
+### Creating tbl of fitted values ###
 
 fitted_comb_angle <-
     data_frame(
@@ -182,6 +190,9 @@ fitted_comb_angle <-
     ) %>% 
     as_tibble()
 
+
+### Plotting fitted values agaist each other ###
+
 fitted_comb_angle %>% 
     ggplot(aes(x = launch_angle_sc)) + 
     geom_point(aes(y = glm_fitted), color = "black") + 
@@ -189,7 +200,7 @@ fitted_comb_angle %>%
     theme_minimal()
 
 
-### predict over grid ----
+#### predicting over a grid of angle values ----
 
 angle_p <-
     expand.grid(
@@ -197,9 +208,11 @@ angle_p <-
     ) %>%
     as_tibble()
 
-
 fit.gam.angle_pred <- predict(fit.gam.angle, newdata = angle_p, type = "link") %>% invlogit()
 fit.glm.angle_pred <- predict(fit.glm.angle, newdata = angle_p, type = "link") %>% invlogit()
+
+
+### Checking the density of the fitted values ###
 
 plot(density(fit.gam.angle_pred))
 plot(density(fit.glm.angle_pred))
@@ -209,8 +222,7 @@ plot(density(fit.glm.angle_pred))
 # ---- Fitting models for speed ----
 #----------------------------------#
 
-
-### GLM ----
+#### GLM ----
 
 fit.glm.speed <-
     glm(
@@ -225,12 +237,14 @@ tidy(fit.glm.speed)
 plot(fit.glm.speed)
 
 
-### GAM ----
+#### GAM ----
+
+## Trying a (default) thin-plate spline with k = 50
 
 fit.gam.speed <-
     gam(
         outcome ~ 
-            s(launch_speed_sc),
+            s(launch_speed_sc, k = 50
         
         family = binomial,
         data = statcast_data_sample)
@@ -241,9 +255,15 @@ tidy(fit.gam.speed)
 plot(fit.gam.speed)
 
 
-### Comparing ----
+#### Comparing ----
+
+### Not nested, but can still get a sense of relative performance ###
 
 anova(fit.glm.speed, fit.gam.speed, test = "Chisq")
+AIC(fit.glm.speed, fit.gam.speed)
+
+
+### Creating tbl of fitted values ###
 
 fitted_comb_speed <-
     data_frame(
@@ -254,6 +274,9 @@ fitted_comb_speed <-
     ) %>% 
     as_tibble()
 
+
+### Plotting fitted values agaist each other ###
+
 fitted_comb_speed %>% 
     ggplot(aes(x = launch_speed_sc)) + 
     geom_line(aes(y = glm_fitted), color = "black") + 
@@ -263,8 +286,7 @@ fitted_comb_speed %>%
     theme_minimal()
 
 
-
-### predict over grid ----
+#### predicting over a grid of speed values ----
 
 speed_p <-
     expand.grid(
@@ -272,13 +294,17 @@ speed_p <-
     ) %>%
     as_tibble()
 
-
 fit.gam.speed_pred <- predict(fit.gam.speed, newdata = speed_p, type = "link") %>% invlogit()
 fit.glm.speed_pred <- predict(fit.glm.speed, newdata = speed_p, type = "link") %>% invlogit()
+
+
+### Checking the density of the fitted values ###
 
 plot(density(fit.gam.speed_pred))
 plot(density(fit.glm.speed_pred))
 
+
+### Plotting predicted values agaist each other ###
 
 bind_cols(speed_p, data.frame(fit.gam.speed_pred, fit.glm.speed_pred)) %>% 
     ggplot(aes(x = launch_speed_sc)) +
@@ -289,12 +315,14 @@ bind_cols(speed_p, data.frame(fit.gam.speed_pred, fit.glm.speed_pred)) %>%
     theme_minimal()
 
 
-#----------------------------------#
-# ---- Fitting models ----
-#----------------------------------#
+#--------------------------------------#
+# ---- Fitting more complex models ----
+#--------------------------------------#
 
 
 ### GLM ----
+
+## Adding a quadratic term for launch angle
 
 fit.glm <-
     glm(
@@ -314,10 +342,12 @@ plot(fit.glm)
 
 ### GAM ----
 
+## Trying a (default) thin-plate spline with k = 50
+
 fit.gam.1 <-
     gam(
         outcome ~ 
-            s(launch_angle_sc, launch_speed_sc, k = 100),
+            s(launch_angle_sc, launch_speed_sc, k = 50,
         
         family = binomial,
         data = statcast_data_sample)
@@ -332,10 +362,12 @@ gam.check(fit.gam.1)
 
 ### GAM ----
 
+## Seeing if specifying separate, non-interactive smooth terms is any different
+
 fit.gam.2 <-
     gam(
         outcome ~ 
-            s(launch_angle_sc) + s(launch_speed_sc),
+            s(launch_angle_sc, k = 50) + s(launch_speed_sc, k = 50),
         
         family = binomial,
         data = statcast_data_sample)
@@ -346,49 +378,29 @@ tidy(fit.gam.2)
 plot(fit.gam.2)
 
 
-
 ### GAM ----
 
-fit.gam.3.1 <-
-    bam(
-        outcome ~ 
-            te(launch_angle_sc, launch_speed_sc, k = 100),
-            # te(launch_angle_sc, launch_speed_sc, bs = "tp"),
+## Trying a full tensor product smooth, which (basically) captures the interaction
         
-        family = binomial,
-        data = statcast_data_sample)
-
-summary(fit.gam.3)
-tidy(fit.gam.3.1)
-
-plot(fit.gam.3.1)
-
-
-
-### GAM ----
-
-fit.gam.3.1 <-
+fit.gam.3 <-
     bam(
         outcome ~ 
             te(launch_angle_sc, launch_speed_sc, k = 50),
-            # te(launch_angle_sc, launch_speed_sc, bs = "tp"),
         
         family = binomial,
         data = statcast_data_sample)
 
 summary(fit.gam.3)
-tidy(fit.gam.3.1)
+tidy(fit.gam.3)
 
-plot(fit.gam.3.1)
-
+plot(fit.gam.3)
 
 
 #----------------------------------#
-# ---- GAM Predictions ----
+# Model Predictions ----
 #----------------------------------#
 
-
-### predict over grid ----
+#### Constructing grid of angle and speed values ----
 
 speed_angle_p <-
     expand.grid(
@@ -398,15 +410,16 @@ speed_angle_p <-
     as_tibble()
 
 
+#### GLM predicted probabilities ----
 
-### Plotting predictions ----
+### Computing predicted values ###
 
 fit.glm_pred <- predict(fit.glm, newdata = speed_angle_p, type = "link") %>% invlogit()
 
+### Plotting predicted probability of a batted ball being a hit ###
 
 data.frame(speed_angle_p, fit.glm_pred) %>% 
     
-    # gam_df_p %>% 
     ggplot(aes(x = launch_angle_sc, y = launch_speed_sc, z = fit.glm_pred))  +
     stat_contour(
         geom = "polygon",
@@ -415,26 +428,23 @@ data.frame(speed_angle_p, fit.glm_pred) %>%
         aes(fill = ..level..)
         # aes(fill = fit.glm_pred)
     ) +
-    # scale_fill_gradientn(colours = heat.colors(10)) +
     scale_fill_viridis_c(option = "viridis") +
-    # scale_fill_viridis_c(option = "magma") +
-    # scale_fill_viridis_c(option = "inferno") +
-    # scale_fill_viridis_c(option = "plasma") +
     geom_vline(xintercept = 0, color = "black") +
     # xlim(-25, 50) +
     # ylim(40, 120) +
-    ggtitle("Contour Plot of Probability of Hit") + 
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) 
+    labs(title = "Contour Plot of Probability of Hit", subtitle = deparse(fit.glm$call)) +
+    theme_bw()
 
+#### GAM 1 predicted probabilities ----
 
-### Plotting predictions ----
+### Computing predicted values ###
 
 fit.gam.1_pred <- predict(fit.gam.1, newdata = speed_angle_p, type = "link") %>% invlogit()
 
+### Plotting predicted probability of a batted ball being a hit ###
 
 data.frame(speed_angle_p, fit.gam.1_pred) %>% 
 
-# gam_df_p %>% 
     ggplot(aes(x = launch_angle_sc, y = launch_speed_sc, z = fit.gam.1_pred))  +
     stat_contour(
         geom = "polygon",
@@ -442,26 +452,24 @@ data.frame(speed_angle_p, fit.gam.1_pred) %>%
         size = 1.5,
         aes(fill = ..level..)
     ) +
-    # scale_fill_gradientn(colours = heat.colors(10)) +
     scale_fill_viridis_c(option = "viridis") +
-    # scale_fill_viridis_c(option = "magma") +
-    # scale_fill_viridis_c(option = "inferno") +
-    # scale_fill_viridis_c(option = "plasma") +
     geom_vline(xintercept = 0, color = "black") +
     xlim(-25, 50) +
     ylim(40, 120) +
-    ggtitle("Contour Plot of Probability of Hit") + 
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) 
+    labs(title = "Contour Plot of Probability of Hit", subtitle = deparse(fit.gam.1$call)) +
+    theme_bw()
 
 
-### Plotting predictions ----
+#### GAM 3 predicted probabilities ----
+
+### Computing predicted values ###
 
 fit.gam.3_pred <- predict(fit.gam.3, newdata = speed_angle_p, type = "link") %>% invlogit()
 
+### Plotting predicted probability of a batted ball being a hit ###
 
 data.frame(speed_angle_p, fit.gam.3_pred) %>% 
 
-# gam_df_p %>% 
     ggplot(aes(x = launch_angle_sc, y = launch_speed_sc, z = fit.gam.3_pred))  +
     stat_contour(
         geom = "polygon",
@@ -469,23 +477,17 @@ data.frame(speed_angle_p, fit.gam.3_pred) %>%
         size = 1.5,
         aes(fill = ..level..)
     ) +
-    # scale_fill_gradientn(colours = heat.colors(10)) +
     scale_fill_viridis_c(option = "viridis") +
-    # scale_fill_viridis_c(option = "magma") +
-    # scale_fill_viridis_c(option = "inferno") +
-    # scale_fill_viridis_c(option = "plasma") +
     geom_vline(xintercept = 0, color = "black") +
     xlim(-25, 50) +
     ylim(40, 120) +
-    ggtitle("Contour Plot of Probability of Hit") + 
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) 
+    labs(title = "Contour Plot of Probability of Hit", subtitle = deparse(fit.gam.3$call)) +
+    theme_bw()
 
 
+#### Plotting ROC curves to examine model performance ----
 
-### Plotting predictions ----
-
-
-roccurve.1 <-
+roccurve.glm <-
     roc(
         model.frame(fit.glm)$outcome ~ predict(fit.glm, type = "response"),
         grid = TRUE,
@@ -495,17 +497,17 @@ roccurve.1 <-
         main = "fit.glm.1"
     )
 
-roccurve.2.1 <-
+roccurve.gam.1 <-
     roc(
         model.frame(fit.gam.1)$outcome ~ predict(fit.gam.1, type = "response"),
         grid = TRUE,
         plot = TRUE,
         print.thres = TRUE,
         print.auc = TRUE,
-        main = "fit.gam"
+        main = "fit.gam.1"
     )
 
-roccurve.3 <-
+roccurve.gam.2 <-
     roc(
         model.frame(fit.gam.2)$outcome ~ predict(fit.gam.2, type = "response"),
         grid = TRUE,
@@ -515,67 +517,16 @@ roccurve.3 <-
         main = "fit.gam.2"
     )
 
-roccurve.3.1 <-
+roccurve.gam.3 <-
     roc(
-        model.frame(fit.gam.3.1)$outcome ~ predict(fit.gam.3.1, type = "response"),
+        model.frame(fit.gam.3)$outcome ~ predict(fit.gam.3, type = "response"),
         grid = TRUE,
         plot = TRUE,
         print.thres = TRUE,
         print.auc = TRUE,
-        main = "fit.gam.3.1"
+        main = "fit.gam.3"
     )
 
-#=============================#
-#### GAMs ####
-#=============================#
-
-fit1 <- lm(wage ~ ns(year, df = 5) + ns(age, df = 5) + education, data = Wage)
-
-fit2 <- gam(wage ~ ns(year, df = 5) + ns(age, df = 5) + education, data = Wage)
-
-plot(fit2, se = TRUE)
-
-fit3 <- gam(wage ~ s(year, df = 5) + s(age, df = 5) + education, data = Wage)
-
-plot(fit3, se = TRUE)
-
-
-
-
-fit.gam.s2 <-
-    gam::gam(
-        outcome ~ 
-            ns(launch_angle_sc) + ns(launch_speed_sc),
+##########################################################################################
+##########################################################################################
         
-        family = binomial,
-        data = statcast_data_sample)
-
-summary(fit.gam.s2)
-tidy(fit.gam.s2)
-
-
-
-
-fit.glm.s <-
-    glm(
-        outcome ~ 
-            s(launch_angle_sc) + s(launch_speed_sc),
-        
-        family = binomial,
-        data = statcast_data_sample)
-
-summary(fit.gam.s2)
-tidy(fit.gam.s2)
-
-
-ns(statcast_data_sample$launch_speed_sc)
-bs(statcast_data_sample$launch_speed_sc)
-s(statcast_data_sample$launch_speed_sc)
-
-######################################
-
-anova(fit.gam.2, freq = FALSE)
-
-gam.check(fit.gam.2)
-
-######################################
