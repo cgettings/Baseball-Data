@@ -11,4 +11,4 @@ Code to scrape, clean, organize, etc. Major League Baseball data. Also pretty pl
 
 ### Giancarlo Stanton Citi Field Home Run Heat Map
 
-![Giancarlo Stanton Citi Field Home Run Heat Map](https://raw.githubusercontent.com/cgettings/Baseball-Data/master/plots/Giancarlo%20Stanton%20Citi%20Field%20Home%20Run%20Heat%20Map%205.png)
+![Giancarlo Stanton Home Run Heat Map](https://raw.githubusercontent.com/cgettings/Baseball-Data/master/plots/Giancarlo%20Stanton%20Citi%20Field%20Home%20Run%20Heat%20Map%205.png)
