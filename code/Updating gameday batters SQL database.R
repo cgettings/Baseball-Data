@@ -29,18 +29,17 @@ library(xml2)
 #### Loading functions ####
 #==========================#
 
-source("./code/functions/get_batters.xml_do.R")
-source("./code/functions/gid2date.R")
+source("~/BASP/R analyses/Baseball Data/get_batters.xml_do.R")
+source("~/BASP/R analyses/Baseball Data/gid2date.R")
+# source("~/BASP/R analyses/Baseball Data/gids2urls.R")
 
 #=====================#
 #### Loading Data ####
 #=====================#
 
-#--------------------------------#
-# Connecting to database ----
-#--------------------------------#
+setwd("~/BASP/R analyses/Baseball Data/Data Files")
 
-batter_db <- dbConnect(RSQLite::SQLite(), "./data/batter_db.sqlite3")
+batter_db <- dbConnect(RSQLite::SQLite(), "batter_db.sqlite3")
 
 #--------------------------------#
 # ---- Getting gids ----
@@ -85,7 +84,7 @@ gids_distinct <-
 
 # ---- Downloading ----
 
-template <- read_rds("./data/template.RDS")
+template <- read_rds("template.RDS")
 all_batter_info <- template
 
 

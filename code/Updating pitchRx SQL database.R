@@ -1,18 +1,14 @@
-###########################################-
-###########################################-
+###########################################
+###########################################
 ##
-## updating pitchRx data ----
+## Updating pitchRx data
 ##
-###########################################-
-###########################################-
+###########################################
+###########################################
 
 #=========================#
-# Setting up ----
+#### Loading packages ####
 #=========================#
-
-#-------------------------#
-# Loading libraries ----
-#-------------------------#
 
 library(readxl)
 library(readr)
@@ -29,22 +25,34 @@ library(DBI)
 library(pryr)
 library(pitchRx)
 
-#-------------------------#
-# Loading libraries ----
-#-------------------------#
+#==========================#
+#### Loading functions ####
+#==========================#
 
-source("./code/functions/get_game.xml.R")
-source("./code/functions/gid2date.R")
+
+source("~/BASP/R analyses/Baseball Data/get_game.xml.R")
+source("~/BASP/R analyses/Baseball Data/gid2date.R")
+
+
+#=====================#
+#### Loading Data ####
+#=====================#
+
+setwd("~/BASP/R analyses/Baseball Data/Data Files")
+
+#=============================#
+#### Finding missing gids ####
+#=============================#
 
 #--------------------------------#
-# Connecting to database ----
+# ---- Initializing database ----
 #--------------------------------#
 
-pitchRx_db      <- dbConnect(RSQLite::SQLite(), "./data/pitchRx_db.sqlite3")
-pitchRx_db_temp <- dbConnect(RSQLite::SQLite(), "./data/pitchRx_db_temp.sqlite3")
+pitchRx_db <- dbConnect(RSQLite::SQLite(), "pitchRx_db.sqlite3")
+pitchRx_db_temp <- dbConnect(RSQLite::SQLite(), "pitchRx_db_temp.sqlite3")
 
 #-----------------------------------#
-# Dropping old temp tables ----
+# ---- Dropping old temp tables ----
 #-----------------------------------#
 
 if (db_has_table(pitchRx_db_temp, "action"))
@@ -81,7 +89,7 @@ if (db_has_table(pitchRx_db_temp, "umpire"))
     db_drop_table(pitchRx_db_temp, "umpire")
 
 #--------------------------------#
-# Getting gids ----
+# ---- Getting gids ----
 #--------------------------------#
 
 most_recent_day <-
@@ -141,17 +149,17 @@ if (nrow(gids_distinct) == 0) {
 
 
 #=============================#
-# Downloading data ----
+#### Downloading data ####
 #=============================#
 
 #------------------------------------------#
-# Initializing temporary database ----
+# ---- Initializing temporary database ----
 #------------------------------------------#
 
 pitchRx_db_temp <- dbConnect(RSQLite::SQLite(), "pitchRx_db_temp.sqlite3")
 
 #----------------------------------------------------------#
-# Downloading gameday data with `pitchRx::scrape` ----
+# ---- Downloading gameday data with `pitchRx::scrape` ----
 #----------------------------------------------------------#
 
 scrape(
@@ -168,12 +176,10 @@ scrape(
 
 
 #-----------------------------------------------#
-# Creating new columns in scraped data ----
+# ---- Creating new columns in scraped data ----
 #-----------------------------------------------#
 
 # ---- atbat ----
-
-## adding new columns ##
 
 dbExecute(pitchRx_db_temp, "ALTER TABLE atbat ADD at_bat_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE atbat ADD game_date")
@@ -187,8 +193,6 @@ dbExecute(pitchRx_db_temp, "UPDATE atbat SET game_year = substr(game_date, 1, 4)
 
 
 # ---- pitch ----
-
-## adding new columns ##
 
 dbExecute(pitchRx_db_temp, "ALTER TABLE pitch ADD pitch_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE pitch ADD at_bat_number")
@@ -205,8 +209,6 @@ dbExecute(pitchRx_db_temp, "UPDATE pitch SET game_year = substr(game_date, 1, 4)
 
 # ---- player ----
 
-## adding new columns ##
-
 dbExecute(pitchRx_db_temp, "ALTER TABLE player ADD at_bat_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE player ADD game_date")
 dbExecute(pitchRx_db_temp, "ALTER TABLE player ADD game_year")
@@ -217,8 +219,6 @@ dbExecute(pitchRx_db_temp, "UPDATE player SET game_year = substr(game_date, 1, 4
 
 
 # ---- action ----
-
-## adding new columns ##
 
 dbExecute(pitchRx_db_temp, "ALTER TABLE action ADD at_bat_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE action ADD pitch_number")
@@ -235,8 +235,6 @@ dbExecute(pitchRx_db_temp, "UPDATE action SET game_year = substr(game_date, 1, 4
 
 # ---- game ----
 
-## adding new columns ##
-
 dbExecute(pitchRx_db_temp, "ALTER TABLE game ADD game_date")
 dbExecute(pitchRx_db_temp, "ALTER TABLE game ADD game_year")
 
@@ -246,8 +244,6 @@ dbExecute(pitchRx_db_temp, "UPDATE game SET game_year = substr(game_date, 1, 4)"
 
 
 # ---- hip ----
-
-## adding new columns ##
 
 dbExecute(pitchRx_db_temp, "ALTER TABLE hip ADD hip_event")
 dbExecute(pitchRx_db_temp, "ALTER TABLE hip ADD game_date")
@@ -259,8 +255,6 @@ dbExecute(pitchRx_db_temp, "UPDATE hip SET game_year = substr(game_date, 1, 4)")
 
 
 # ---- runner ----
-
-## adding new columns ##
 
 dbExecute(pitchRx_db_temp, "ALTER TABLE runner ADD at_bat_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE runner ADD runner_event")
@@ -275,8 +269,6 @@ dbExecute(pitchRx_db_temp, "UPDATE runner SET game_year = substr(game_date, 1, 4
 
 # ---- po ----
 
-## adding new columns ##
-
 dbExecute(pitchRx_db_temp, "ALTER TABLE po ADD at_bat_number")
 dbExecute(pitchRx_db_temp, "ALTER TABLE po ADD po_event")
 dbExecute(pitchRx_db_temp, "ALTER TABLE po ADD game_date")
@@ -290,8 +282,6 @@ dbExecute(pitchRx_db_temp, "UPDATE po SET game_year = substr(game_date, 1, 4)")
 
 # ---- coach ----
 
-## adding new columns ##
-
 dbExecute(pitchRx_db_temp, "ALTER TABLE coach ADD game_date")
 dbExecute(pitchRx_db_temp, "ALTER TABLE coach ADD game_year")
 
@@ -301,8 +291,6 @@ dbExecute(pitchRx_db_temp, "UPDATE coach SET game_year = substr(game_date, 1, 4)
 
 # ---- umpire ----
 
-## adding new columns ##
-
 dbExecute(pitchRx_db_temp, "ALTER TABLE umpire ADD game_date")
 dbExecute(pitchRx_db_temp, "ALTER TABLE umpire ADD game_year")
 
@@ -311,11 +299,11 @@ dbExecute(pitchRx_db_temp, "UPDATE umpire SET game_year = substr(game_date, 1, 4
 
 
 #======================================#
-# Copying data to main database ----
+#### Copying data to main database ####
 #======================================#
 
 #----------------#
-# atbat ----
+# ---- atbat ----
 #----------------#
 
 atbat <- tbl(pitchRx_db_temp, "atbat") %>% collect()
@@ -367,9 +355,8 @@ rm(atbat)
 rm(atbat_2)
 gc()
 
-
 #----------------#
-# pitch ----
+# ---- pitch ----
 #----------------#
 
 pitch <- tbl(pitchRx_db_temp, "pitch") %>% collect()
@@ -420,9 +407,8 @@ rm(pitch)
 rm(pitch_2)
 gc()
 
-
 #----------------#
-# action ----
+# ---- action ----
 #----------------#
 
 action <- tbl(pitchRx_db_temp, "action") %>% collect()
@@ -475,9 +461,8 @@ rm(action)
 rm(action_2)
 gc()
 
-
 #----------------#
-# game ----
+# ---- game ----
 #----------------#
 
 game <- tbl(pitchRx_db_temp, "game") %>% collect()
@@ -499,7 +484,7 @@ rm(game)
 gc()
 
 #----------------#
-# player ----
+# ---- player ----
 #----------------#
 
 player <- tbl(pitchRx_db_temp, "player") %>% collect()
@@ -520,9 +505,8 @@ dbWriteTable(
 rm(player)
 gc()
 
-
 #----------------#
-# hip ----
+# ---- hip ----
 #----------------#
 
 hip <- tbl(pitchRx_db_temp, "hip") %>% collect()
@@ -543,9 +527,8 @@ dbWriteTable(
 rm(hip)
 gc()
 
-
 #----------------#
-# runner ----
+# ---- runner ----
 #----------------#
 
 runner <- tbl(pitchRx_db_temp, "runner") %>% collect()
@@ -566,9 +549,8 @@ dbWriteTable(
 rm(runner)
 gc()
 
-
 #----------------#
-# po ----
+# ---- po ----
 #----------------#
 
 po <- tbl(pitchRx_db_temp, "po") %>% collect()
@@ -589,9 +571,8 @@ dbWriteTable(
 rm(po)
 gc()
 
-
 #----------------#
-# coach ----
+# ---- coach ----
 #----------------#
 
 coach <- tbl(pitchRx_db_temp, "coach") %>% collect()
@@ -612,9 +593,8 @@ dbWriteTable(
 rm(coach)
 gc()
 
-
 #----------------#
-# umpire ----
+# ---- umpire ----
 #----------------#
 
 umpire <- tbl(pitchRx_db_temp, "umpire") %>% collect()
