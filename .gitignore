@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+code/data_gathering_code/source_gameday_batters_SQL_update.R
+code/data_gathering_code/source_hit_tracker_update.R
+code/data_gathering_code/source_pitchRx_SQL_update.R
+code/data_gathering_code/source_Statcast_SQL_update.R
+code/data_gathering_code/source_Statcast_update.R
