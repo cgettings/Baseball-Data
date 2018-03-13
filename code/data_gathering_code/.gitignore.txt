@@ -1,0 +1,8 @@
+source_gameday_batters_SQL_update.R
+source_pitchRx_SQL_update.R
+source_Statcast_SQL_update.R
+source_hit_tracker_update.R
+source_pitchRx_players_update.R
+source_Statcast_update.R
+addresses_and_weather.R
+source_Statcast_update.R
