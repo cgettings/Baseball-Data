@@ -12,7 +12,7 @@ get_savant_pitches_data <-
         year_1 <- ymd(from) %>% year()
         
         
-        statcast_test <-
+        statcast_data <-
             read_csv(paste0(
                 "https://baseballsavant.mlb.com/statcast_search/csv?all=true&hfPT=&hfAB=&hfBBT=&hfPR=",
                 
@@ -77,5 +77,5 @@ get_savant_pitches_data <-
             #     release_spin_rate = as.integer(release_spin_rate)
             #     )
         
-        return(statcast_test)
+        return(statcast_data)
 }
