@@ -14,19 +14,14 @@
 # Loading libraries ----
 #-------------------------#
 
-library(readxl)
-library(readr)
-library(dplyr)
-library(tidyr)
-library(dbplyr)
-library(stringr)
+library(tidyverse)
 library(lubridate)
 library(stringdist)
-library(stringr)
-library(tibble)
 library(magrittr)
+library(dbplyr)
 library(DBI)
 library(pryr)
+library(useful)
 
 #--------------------------------#
 # Loading functions ----
@@ -61,11 +56,13 @@ most_recent_day <-
     collect() %>% 
     pull(game_date)
 
+## Substituting 2018 opening day ##
+
+most_recent_day <- as_date("2018-03-29")
 
 ## setting the start date ##
 
-# start_date <- today(tzone = "US/Eastern")
-start_date <- as_date("2017-11-15")
+start_date <- today(tzone = "US/Eastern")
 
 ## setting the time span ##
 
@@ -79,7 +76,7 @@ every.1.days <- seq(1, num_days, 1)
 
 back_to <- start_date - every.1.days
 
-## kludge for getting data for just a single day ##
+## kludge for getting data for just a single day - gets around data download limit ##
 
 from <- back_to + 0
 
@@ -113,7 +110,8 @@ for(each_day in 1:length(back_to)) {
         statcast_update_home_all <- 
             
             bind_rows(statcast_update_home_all,
-                      statcast_update_home)
+                      statcast_update_home) %>% 
+            as_tibble()
         
         
         cat("\n===============================\n")
@@ -128,7 +126,7 @@ for(each_day in 1:length(back_to)) {
         cat(nrow(statcast_update_home), "rows added\n")
         cat("Size: ")
         object_size(statcast_update_home) %>% print()
-        cat("\n-------------------------------\n")
+        cat("-------------------------------\n")
         cat(nrow(statcast_update_home_all), "rows added in total\n")
         cat("Size: ")
         object_size(statcast_update_home_all) %>% print()
@@ -159,7 +157,8 @@ for(each_day in 1:length(back_to)) {
         statcast_update_road_all <- 
             
             bind_rows(statcast_update_road_all,
-                      statcast_update_road)
+                      statcast_update_road) %>% 
+            as_tibble()
     
         
         cat("\n===============================\n")
@@ -174,7 +173,7 @@ for(each_day in 1:length(back_to)) {
         cat(nrow(statcast_update_road), "rows added\n")
         cat("Size: ")
         object_size(statcast_update_road) %>% print()
-        cat("\n-------------------------------\n")
+        cat("-------------------------------\n")
         cat(nrow(statcast_update_road_all), "rows added in total\n")
         cat("Size: ")
         object_size(statcast_update_road_all) %>% print()
@@ -189,11 +188,30 @@ gc()
 # Combining home and away ----
 #-----------------------------#
 
-statcast_update_comb <-
+## Combining and dropping variables not in database ##
+
+drop_vars <- 
+    c(
+        "pitch_name",
+        "home_score",
+        "away_score",
+        "bat_score",
+        "fld_score",
+        "post_away_score",
+        "post_home_score",
+        "post_bat_score",
+        "post_fld_score"
+    )
+
+
+statcast_update_comb <- 
     
-    bind_rows(statcast_update_home_all,
-              statcast_update_road_all) %>% 
+    bind_rows(
+        statcast_update_home_all,
+        statcast_update_road_all) %>% 
+    select_if(!names(.) %in% drop_vars) %>% 
     as_tibble()
+
 
 rm(statcast_update_home_all)
 rm(statcast_update_road_all)
@@ -244,7 +262,8 @@ dbWriteTable(
     statcast_db,
     "statcast_update_comb_distinct",
     statcast_update_comb_distinct,
-    overwrite = TRUE
+    overwrite = FALSE,
+    append = TRUE
 )
 
 
@@ -511,31 +530,42 @@ statcast_update_comb_distinct_clean <-
     ## trigonometric operations
     
     mutate(
-        hc_x.0 = hc_x - 125,
-        hc_y.0 = 200 - hc_y,
+        hc_x.0 = hc_x - 125.42,
+        hc_y.0 = 198.27 - hc_y,
         hc_x.new.1 = hc_x.0 * cos(-.75) - hc_y.0 * sin(-.75),
         hc_y.new.1 = hc_x.0 * sin(-.75) + hc_y.0 * cos(-.75),
-        horiz_angle = atan((hc_y.new.1) / (hc_x.new.1)),
-        hit_radius = sqrt((hc_x.new.1)^2 + ((hc_y.new.1))^2)) %>%
-
-    mutate(
-        horiz_angle_new = case_when(
-
-            (sign(hc_x.new.1) == 1 | sign(hc_x.new.1) == 0 | is.na(hc_x.new.1)) &
-            (sign(hc_y.new.1) == 1 | sign(hc_y.new.1) == 0 | is.na(hc_y.new.1)) ~ horiz_angle + 0,
-
-            (sign(hc_x.new.1) == -1) ~ horiz_angle + pi,
-
-            (sign(hc_x.new.1) == 1) & (sign(hc_y.new.1) == -1) ~ horiz_angle + 2*pi, 
-            
-            NA ~ NaN)) %>%
-
-    mutate(
-        horiz_angle_new_deg = (horiz_angle_new * 180) / pi,
-        hc_x.new            = hit_radius * cos(horiz_angle_new),
-        hc_y.new            = hit_radius * sin(horiz_angle_new)) %>%
-
-    mutate(horiz_angle_c = (horiz_angle_new_deg - 45) * -1) %>%
+        horiz_angle = cart2pol(x = hc_x.new.1, y = hc_y.new.1, degrees = FALSE) %>% pull(theta),
+        hit_radius = cart2pol(x = hc_x.new.1, y = hc_y.new.1, degrees = FALSE) %>% pull(r),
+        horiz_angle_new_deg = (horiz_angle * 180) / pi,
+        horiz_angle_c = (horiz_angle_new_deg - 45) * -1
+    ) %>% 
+    
+    # mutate(
+    #     hc_x.0 = hc_x - 125,
+    #     hc_y.0 = 200 - hc_y,
+    #     hc_x.new.1 = hc_x.0 * cos(-.75) - hc_y.0 * sin(-.75),
+    #     hc_y.new.1 = hc_x.0 * sin(-.75) + hc_y.0 * cos(-.75),
+    #     horiz_angle = atan((hc_y.new.1) / (hc_x.new.1)),
+    #     hit_radius = sqrt((hc_x.new.1)^2 + ((hc_y.new.1))^2)) %>%
+    # 
+    # mutate(
+    #     horiz_angle_new = case_when(
+    # 
+    #         (sign(hc_x.new.1) == 1 | sign(hc_x.new.1) == 0 | is.na(hc_x.new.1)) &
+    #         (sign(hc_y.new.1) == 1 | sign(hc_y.new.1) == 0 | is.na(hc_y.new.1)) ~ horiz_angle + 0,
+    # 
+    #         (sign(hc_x.new.1) == -1) ~ horiz_angle + pi,
+    # 
+    #         (sign(hc_x.new.1) == 1) & (sign(hc_y.new.1) == -1) ~ horiz_angle + 2*pi, 
+    #         
+    #         NA ~ NaN)) %>%
+    # 
+    # mutate(
+    #     horiz_angle_new_deg = (horiz_angle_new * 180) / pi,
+    #     hc_x.new            = hit_radius * cos(horiz_angle_new),
+    #     hc_y.new            = hit_radius * sin(horiz_angle_new)) %>%
+    # 
+    # mutate(horiz_angle_c = (horiz_angle_new_deg - 45) * -1) %>%
 
     
     ## categorizing hits into angle groupings

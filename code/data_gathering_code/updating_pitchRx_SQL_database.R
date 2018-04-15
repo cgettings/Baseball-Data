@@ -102,7 +102,12 @@ most_recent_day <-
 #     extract2(1)
 
 
-url <- makeUrls(most_recent_day, today())
+## Substituting 2018 opening day ##
+
+url <- makeUrls(start = most_recent_day, end = as_date("2017-10-11"))
+
+
+# url <- makeUrls(most_recent_day, today())
 gameday_link <- str_trunc(url, 30, "left", "")
 game_date <- gid2date(gameday_link)
 all_gids <- data_frame(game_date, gameday_link, url)
