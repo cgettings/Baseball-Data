@@ -33,8 +33,10 @@ library(pitchRx)
 # Loading libraries ----
 #-------------------------#
 
-source("./code/functions/get_game.xml.R")
-source("./code/functions/gid2date.R")
+# source("./code/functions/get_game.xml.R")
+# source("./code/functions/gid2date.R")
+# source("./code/functions/gids2urls.R")
+# source("./code/functions/makeUrls.R")
 
 #--------------------------------#
 # Connecting to database ----

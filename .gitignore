@@ -7,3 +7,6 @@ code/data_gathering_code/source_hit_tracker_update.R
 code/data_gathering_code/source_pitchRx_SQL_update.R
 code/data_gathering_code/source_Statcast_SQL_update.R
 code/data_gathering_code/source_Statcast_update.R
+data/barrel_data.rds
+code/data_gathering_code/updating_pitchRx_SQL_database.R
+plots/woba_daily_mean_top20.png

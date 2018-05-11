@@ -14,14 +14,14 @@
 # Loading libraries ----
 #-------------------------#
 
-library(tidyverse)
-library(lubridate)
-library(stringdist)
-library(magrittr)
-library(dbplyr)
-library(DBI)
-library(pryr)
-library(useful)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(stringdist))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(dbplyr))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(pryr))
+suppressPackageStartupMessages(library(useful))
 
 #--------------------------------#
 # Loading functions ----
@@ -58,7 +58,7 @@ most_recent_day <-
 
 ## Substituting 2018 opening day ##
 
-most_recent_day <- as_date("2018-03-29")
+# most_recent_day <- as_date("2018-03-29")
 
 ## setting the start date ##
 
@@ -739,9 +739,10 @@ updated_rows <-
 ## pretty printing ##
 
 cat("---------\n")
+cat("Overall:\n")
 cat(updated_rows, "rows added\n")
 statcast_update_comb_distinct_clean %>% object_size() %>% print()
-cat("\n---------\n")
+cat("---------\n")
 
 
 ## writing to temporary table in database ##
@@ -767,8 +768,8 @@ rm(statcast_update_comb_distinct_clean)
 gc()
 
 
-tbl(statcast_db, "statcast_data_updated") %>% glimpse()
-tbl(statcast_db, "statcast_data_updated") %>% select(game_date) %>% collect() %>% nrow()
+# tbl(statcast_db, "statcast_data_updated") %>% glimpse()
+# tbl(statcast_db, "statcast_data_updated") %>% select(game_date) %>% collect() %>% nrow()
 
 
 ## creating indexes ##
