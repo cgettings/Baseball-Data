@@ -132,7 +132,7 @@ ggsave(
     width = 14,
     height = 8,
     dpi = 250,
-    scale = 0.9
+    scale = 0.85
 )
 
 
