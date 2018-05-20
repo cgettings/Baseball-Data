@@ -75,11 +75,11 @@ barrel_count_players <-
     select(batter_id_sc) %>% 
     ungroup() %>% 
     distinct() %>% 
-    slice(1:12)
+    slice(1:20)
 
 barrel_data_2 <- 
     barrel_data %>% 
-    filter(game_year == 2017) %>% 
+    filter(game_year == 2018) %>% 
     inner_join(., barrel_count_players) %>% 
     replace_na(list(estimated_woba_using_speedangle = 0)) %>% 
     group_by(player_name, game_date)
@@ -90,6 +90,9 @@ barrel_data_3 <-
     summarise(woba_mean = mean(estimated_woba_using_speedangle))
 
 
+
+######################
+
 ## Mean estimated wOBA over time, for all at-bats, including walks and sacrifices
 
 
@@ -98,30 +101,32 @@ plot1 <-
     ggplot(aes(x = game_date, y = woba_mean)) + 
     geom_hline(yintercept = 0.950, color = "red") +
     geom_hline(yintercept = 0.0, color = "gray20", size = 0.375, linetype = 1) +
-    # geom_point(
-    #     data = barrel_data_2,
-    #     aes(x = game_date, y = estimated_woba_using_speedangle),
-    #     shape = 1,
-    #     size = 0.75,
-    #     color = "gray50",
-    #     alpha = .7
-    # ) +
-    # geom_line(size = 0.5) +
-    # geom_smooth(method = "gam", formula = y ~ s(x, bs = "tp"), size = 0.75) +
-    # geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs", k = 100), size = 0.75) +
-    geom_smooth(method = "loess", span = 0.25, size = 0.75) +
     geom_point(
-        size = 0.75,
+        data = barrel_data_2,
+        aes(x = game_date, y = estimated_woba_using_speedangle),
         shape = 16,
-        # stroke = 0.5,
+        size = 1,
+        color = "gray50",
+        alpha = .7
+    ) +
+    # geom_smooth(method = "loess", span = 0.5, size = 0.5, alpha = .375) +
+    geom_line(size = 0.375) +
+    geom_point(
+        size = 1.5,
+        shape = 1,
+        stroke = 0.5,
         color = "gray20"
     ) +
     facet_wrap(~player_name, ncol = 5) +
     labs(title = "Barreling toward the hot hand", subtitle = "Mean daily expected weighted on-base average (xwOBA), based on each plate appearance's xwOBA", x = "Date", y = "xwOBA", caption = 'Note: red line indicates an xwOBA of 0.950, i.e. a "barrel"') +
+    scale_y_continuous(limits = c(0, 2)) +
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 0), panel.grid = element_blank())
+    theme(
+        axis.text.x = element_text(angle = 0)
+        # panel.grid = element_blank()
+        )
 
-ggsave(plot = plot1, "./plots/woba_daily_mean_top20_2017_7.png", width = 14, height = 8, dpi = 250)
+ggsave(plot = plot1, "./plots/woba_daily_mean_top20_2018_1.png", width = 14, height = 8, dpi = 250)
 
 
 
