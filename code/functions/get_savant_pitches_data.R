@@ -4,7 +4,7 @@
 get_savant_pitches_data <-
     
     function(
-        # pitch_type = NULL, 
+        # pitch_type = NULL,
         from = lubridate::today(), 
         back_to = lubridate::today() - 1,
         home_road = NULL) {

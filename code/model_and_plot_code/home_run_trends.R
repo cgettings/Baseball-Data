@@ -110,7 +110,7 @@ hr_rate_yearly <-
 plot_1 <- 
     hr_rate %>% 
     ggplot(aes(x = game_date, y = weekly_hr_per_pa)) + 
-    geom_smooth(method = "loess", span = 0.25, size = 0.75) +
+    geom_smooth(method = "loess", span = 0.25, size = 0.75, color = "dodgerblue2") +
     geom_segment(
         data = hr_rate_yearly,
         aes(
@@ -150,7 +150,7 @@ ggsave(plot = plot_1, "./plots/home_run_rate_pa_2008_2018_1.png", width = 14, he
 plot_2 <- 
     hr_rate %>% 
     ggplot(aes(x = game_date, y = weekly_hr_per_bb)) + 
-    geom_smooth(method = "loess", span = 0.25, size = 0.75) +
+    geom_smooth(method = "loess", span = 0.25, size = 0.75, color = "dodgerblue2") +
     geom_segment(
         data = hr_rate_yearly,
         aes(

@@ -42,8 +42,6 @@ suppressPackageStartupMessages(library(useful))
 
 source("./code/functions/get_savant_pitches_data.R")
 
-get_savant_pitches_data_quietly <- quietly(get_savant_pitches_data)
-
 #--------------------------------#
 # Connecting to database ----
 #--------------------------------#
@@ -67,8 +65,8 @@ most_recent_day <-
     select(game_date) %>%
     arrange(desc(game_date)) %>%
     # arrange(game_date) %>%
-    head(1) %>%
-    collect() %>%
+    head(1) %>% 
+    collect() %>% 
     pull(game_date)
 
 ## Substituting 2018 opening day ##
@@ -115,11 +113,10 @@ for(each_day in 1:length(back_to)) {
     
     statcast_update_home <-
         
-        get_savant_pitches_data_quietly(
+        get_savant_pitches_data(
             back_to = back_to[each_day],
             from = from[each_day],
             home_road = "Home") %>% 
-        extract2("result") %>% 
         mutate_all(funs("as.character"))
     
     
@@ -165,11 +162,10 @@ for(each_day in 1:length(back_to)) {
     
     statcast_update_road <-
         
-        get_savant_pitches_data_quietly(
+        get_savant_pitches_data(
             back_to = back_to[each_day],
             from = from[each_day],
             home_road = "Road") %>% 
-        extract2("result") %>% 
         mutate_all(funs("as.character"))
     
     
@@ -213,15 +209,15 @@ gc()
 
 drop_vars <- 
     c(
-        # "pitch_name",
-        # "home_score",
-        # "away_score",
-        # "bat_score",
-        # "fld_score",
-        # "post_away_score",
-        # "post_home_score",
-        # "post_bat_score",
-        # "post_fld_score"
+        "pitch_name",
+        "home_score",
+        "away_score",
+        "bat_score",
+        "fld_score",
+        "post_away_score",
+        "post_home_score",
+        "post_bat_score",
+        "post_fld_score"
     )
 
 
@@ -283,8 +279,8 @@ dbWriteTable(
     statcast_db,
     "statcast_update_comb_distinct",
     statcast_update_comb_distinct,
-    overwrite = TRUE,
-    append = FALSE
+    overwrite = FALSE,
+    append = TRUE
 )
 
 
@@ -782,12 +778,10 @@ dbWriteTable(
     statcast_db,
     "statcast_data_updated",
     statcast_update_comb_distinct_clean,
-    append = TRUE, 
-    overwrite = FALSE, 
-    temporary = FALSE)
+    append = TRUE)
 
 
-# rm(statcast_update_comb_distinct_clean)
+rm(statcast_update_comb_distinct_clean)
 gc()
 
 
@@ -837,19 +831,3 @@ dbDisconnect(statcast_db)
 
 ############################################################################################
 ############################################################################################
-
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD if_fielding_alignment")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD of_fielding_alignment")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD post_away_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD post_home_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD post_bat_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD post_fld_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD pitch_name")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD home_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD away_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD bat_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD fld_score")
-# dbExecute(statcast_db, "ALTER TABLE statcast_data_updated ADD error")
-
-# dbExecute(statcast_db, paste0("DELETE FROM statcast_data_updated WHERE game_date >= '2018-03-29'"))
-

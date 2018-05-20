@@ -109,7 +109,7 @@ plot1 <-
         color = "gray50",
         alpha = .7
     ) +
-    # geom_smooth(method = "loess", span = 0.5, size = 0.5, alpha = .375) +
+    geom_smooth(method = "loess", span = 0.5, size = 0.6, alpha = .25, color = "dodgerblue4", fill = "dodgerblue") +
     geom_line(size = 0.375) +
     geom_point(
         size = 1.5,
@@ -119,7 +119,7 @@ plot1 <-
     ) +
     facet_wrap(~player_name, ncol = 5) +
     labs(title = "Barreling toward the hot hand", subtitle = "Mean daily expected weighted on-base average (xwOBA), based on each plate appearance's xwOBA", x = "Date", y = "xwOBA", caption = 'Note: red line indicates an xwOBA of 0.950, i.e. a "barrel"') +
-    scale_y_continuous(limits = c(0, 2)) +
+    coord_cartesian(ylim = c(0, 2), expand = TRUE) +
     theme_minimal() +
     theme(
         axis.text.x = element_text(angle = 0)
@@ -132,7 +132,7 @@ ggsave(
     width = 14,
     height = 8,
     dpi = 250,
-    scale = 0.85
+    scale = 1.1
 )
 
 
