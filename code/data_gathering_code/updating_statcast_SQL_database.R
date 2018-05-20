@@ -6,6 +6,19 @@
 ###########################################-
 ###########################################-
 
+## This code will build and update an SQLite database containing Statcast data,
+##  downloaded from https://baseballsavant.mlb.com/statcast_search. I use it mostly for
+##  updating an existing database, and for this purpose you can just source this file and 
+##  let it do its thing. If you want to build one from scratch, then it's best to use this 
+##  file interactively. There are blocks that print progress info to the console, because I find
+##  this helpful.
+##
+## The code also sources in a custom workhorse function that does the dirty work of
+##  constructing a URL using the parameters you specify in the function call. Bill Petti's
+##  {baseballr} package has functions (e.g., `scrape_statcast_savant_batter`) that do this
+##  also (and probably better, but at least in a more sophicticated way), in addition to
+##  some other neat scraping functions.
+
 #=========================#
 # Setting up ----
 #=========================#
@@ -114,6 +127,8 @@ for(each_day in 1:length(back_to)) {
             as_tibble()
         
         
+        ## Pretty printing info to console
+        
         cat("\n===============================\n")
         cat("Home")
         cat("\n-------------------------------\n")
@@ -160,6 +175,8 @@ for(each_day in 1:length(back_to)) {
                       statcast_update_road) %>% 
             as_tibble()
     
+        
+        ## Pretty printing info to console
         
         cat("\n===============================\n")
         cat("Road")
@@ -771,8 +788,11 @@ gc()
 # tbl(statcast_db, "statcast_data_updated") %>% glimpse()
 # tbl(statcast_db, "statcast_data_updated") %>% select(game_date) %>% collect() %>% nrow()
 
+#=========================#
+# creating indexes ----
+#=========================#
 
-## creating indexes ##
+## If building database from scratch, create indexes ##
 
 # db_create_index(statcast_db, "statcast_data_updated", "pitch_type")
 # db_create_index(statcast_db, "statcast_data_updated", "game_date")
