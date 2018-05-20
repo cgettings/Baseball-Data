@@ -126,7 +126,14 @@ plot1 <-
         # panel.grid = element_blank()
         )
 
-ggsave(plot = plot1, "./plots/woba_daily_mean_top20_2018_1.png", width = 14, height = 8, dpi = 250)
+ggsave(
+    plot = plot1,
+    "./plots/woba_daily_mean_top20_2018_1.png",
+    width = 14,
+    height = 8,
+    dpi = 250,
+    scale = 0.9
+)
 
 
 
