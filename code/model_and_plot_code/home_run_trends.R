@@ -191,7 +191,7 @@ plot_2 <-
 
 ggsave(
     plot = plot_2,
-    glue("./plots/home_run_rate_bb_2008_2018_{most_recent_day}.png"),
+    glue("./plots/home_run_rate_bb_2008_2018_1.png"),
     width = 14,
     height = 8,
     dpi = 250
