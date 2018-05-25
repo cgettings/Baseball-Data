@@ -52,6 +52,13 @@ hr_data <-
            estimated_woba_using_speedangle) %>% 
     collect()
 
+most_recent_day <-
+    hr_data %>%
+    arrange(desc(game_date)) %>%
+    head(1) %>%
+    collect() %>%
+    pull(game_date) %>% 
+    as_date()
 
 #--------------------------------#
 # Calculating home run rate ----
@@ -126,6 +133,7 @@ plot_1 <-
     geom_point() +
     labs(
         title = "Weekly home runs per plate appearance",
+        subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "HR Rate"
     ) +
@@ -166,6 +174,7 @@ plot_2 <-
     geom_point() +
     labs(
         title = "Weekly home runs per batted ball",
+        subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "HR Rate"
     ) +
@@ -180,7 +189,13 @@ plot_2 <-
         # panel.grid.minor = element_line(size = .25, color = "gray90"),
         panel.border = element_rect(color = "black", size = .25, fill = NA))
 
-ggsave(plot = plot_2, "./plots/home_run_rate_bb_2008_2018_1.png", width = 14, height = 8, dpi = 250)
+ggsave(
+    plot = plot_2,
+    glue("./plots/home_run_rate_bb_2008_2018_{most_recent_day}.png"),
+    width = 14,
+    height = 8,
+    dpi = 250
+)
 
 
 ##################################
