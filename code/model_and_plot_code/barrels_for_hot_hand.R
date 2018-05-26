@@ -1,7 +1,7 @@
 ###########################################-
 ###########################################-
 ##
-## updating Statcast data ----
+## Barrels for hot hand ----
 ##
 ###########################################-
 ###########################################-
@@ -57,6 +57,14 @@ barrel_data <-
             TRUE ~ 0L))
 
 
+most_recent_day <-
+    barrel_data %>%
+    pull(game_date) %>% 
+    sort(decreasing = TRUE) %>% 
+    extract2(1) %>% 
+    as_date()
+
+
 barrel_count <- 
     barrel_data %>% 
     filter(game_year == 2018) %>% 
@@ -67,7 +75,6 @@ barrel_count <-
         .,
         barrel_data %>% filter(game_year == 2018) %>% select(player_name, batter_id_sc) %>% distinct()
     )
-
 
 barrel_count_players <- 
     barrel_count %>% 
@@ -118,7 +125,13 @@ plot1 <-
         color = "gray20"
     ) +
     facet_wrap(~player_name, ncol = 5) +
-    labs(title = "Barreling toward the hot hand", subtitle = "Mean daily expected weighted on-base average (xwOBA), based on each plate appearance's xwOBA", x = "Date", y = "xwOBA", caption = 'Note: red line indicates an xwOBA of 0.950, i.e. a "barrel"') +
+    labs(
+        title = "Mean daily expected weighted on-base average (xwOBA), based on each plate appearance's xwOBA",
+        caption = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
+        x = "Date",
+        y = "xwOBA",
+        caption = 'Note: red line indicates an xwOBA of 0.950, i.e. a "barrel"'
+    ) +
     coord_cartesian(ylim = c(0, 2), expand = TRUE) +
     theme_minimal() +
     theme(
@@ -135,7 +148,14 @@ ggsave(
     scale = 1.1
 )
 
-
+ggsave(
+    plot = plot1,
+    glue("./plots/woba_daily_mean_top20_2018_{most_recent_day}.png"),
+    width = 14,
+    height = 8,
+    dpi = 250,
+    scale = 1.1
+)
 
 ########################################
 

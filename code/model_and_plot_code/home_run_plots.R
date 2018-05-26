@@ -19,7 +19,6 @@ library(stringdist)
 library(magrittr)
 library(dbplyr)
 library(DBI)
-library(tidyquant)
 library(tibbletime)
 library(glue)
 library(tidyverse)
@@ -77,7 +76,7 @@ hr_data_2 <-
             events == "home_run" ~ 1L, 
             events != "home_run" & type == "X" ~ 0L,
             TRUE ~ NA_integer_)
-        )
+    )
 
 hr_rate <- 
     hr_data_2 %>% 
@@ -87,7 +86,7 @@ hr_rate <-
         weekly_hr_per_bb = mean(HR_v_other_bb, na.rm = TRUE),
         weekly_launch_speed = mean(launch_speed_sc, na.rm = TRUE),
         weekly_launch_angle = mean(launch_angle_sc, na.rm = TRUE)
-        ) %>% 
+    ) %>% 
     left_join(
         .,
         hr_data_2 %>% 
@@ -102,7 +101,7 @@ hr_rate_yearly <-
     summarise(
         yearly_hr_per_pa = mean(HR_v_other_pa, na.rm = TRUE),
         yearly_hr_per_bb = mean(HR_v_other_bb, na.rm = TRUE)
-        )
+    )
 
 
 #================================#
@@ -132,7 +131,7 @@ plot_1 <-
     geom_point() +
     labs(
         title = "Weekly home runs per plate appearance",
-        caption = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
+        subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "HR Rate"
     ) +
@@ -147,7 +146,22 @@ plot_1 <-
         # panel.grid.minor = element_line(size = .25, color = "gray90"),
         panel.border = element_rect(color = "black", size = .25, fill = NA))
 
-ggsave(plot = plot_1, "./plots/home_run_rate_pa_2008_2018_1.png", width = 14, height = 8, dpi = 250)
+
+ggsave(
+    plot = plot_1,
+    glue("./plots/home_run_rate_pa_2008_2018_1.png"),
+    width = 14,
+    height = 8,
+    dpi = 250
+)
+
+ggsave(
+    plot = plot_1,
+    glue("./plots/home_run_rate_pa_2008_2018_{most_recent_day}.png"),
+    width = 14,
+    height = 8,
+    dpi = 250
+)
 
 
 #--------------------------------#
@@ -173,7 +187,7 @@ plot_2 <-
     geom_point() +
     labs(
         title = "Weekly home runs per batted ball",
-        caption = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
+        subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "HR Rate"
     ) +
@@ -207,4 +221,3 @@ ggsave(
 
 ##################################
 ##################################
-
