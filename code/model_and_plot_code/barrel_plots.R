@@ -85,14 +85,28 @@ barrel_data_2 <-
     barrel_data %>% 
     filter(game_year == 2018) %>% 
     inner_join(., barrel_count_players) %>% 
+    mutate(player_name = as_factor(player_name)) %>% 
     replace_na(list(estimated_woba_using_speedangle = 0)) %>% 
-    group_by(player_name, game_date)
-
+    mutate(
+        player_name = fct_reorder(
+            .f = player_name, 
+            .x = estimated_woba_using_speedangle, 
+            .fun = mean,
+            .desc = TRUE,
+            na.rm = TRUE)
+    )
 
 barrel_data_3 <- 
     barrel_data_2 %>% 
-    summarise(woba_mean = mean(estimated_woba_using_speedangle))
+    group_by(player_name, game_date) %>% 
+    summarise(xwoba_mean_daily = mean(estimated_woba_using_speedangle)) %>% 
+    ungroup()
 
+barrel_data_4 <- 
+    barrel_data_2 %>% 
+    group_by(player_name) %>% 
+    summarise(xwoba_mean_player = mean(estimated_woba_using_speedangle, na.rm = TRUE)) %>% 
+    ungroup()
 
 
 ######################
@@ -102,32 +116,67 @@ barrel_data_3 <-
 
 plot1 <- 
     barrel_data_3 %>% 
-    ggplot(aes(x = game_date, y = woba_mean)) + 
-    geom_hline(yintercept = 0.950, color = "red") +
-    geom_hline(yintercept = 0.0, color = "gray20", size = 0.375, linetype = 1) +
+    ggplot(aes(x = game_date, y = xwoba_mean_daily)) + 
+    
+    # geom_hline(
+    #     yintercept = 0.0,
+    #     color = "gray20",
+    #     size = 0.375,
+    #     linetype = 1
+    # ) +
+    geom_hline(
+        yintercept = 0.950, 
+        color = "black",
+        linetype = 2,
+        size = 0.5
+    ) +
+    
     geom_point(
         data = barrel_data_2,
         aes(x = game_date, y = estimated_woba_using_speedangle),
-        shape = 16,
+        shape = 1,
         size = 1,
         color = "gray50",
         alpha = .7
     ) +
-    geom_smooth(method = "loess", span = 0.5, size = 0.6, alpha = .25, color = "dodgerblue4", fill = "dodgerblue") +
-    geom_line(size = 0.375) +
-    geom_point(
-        size = 1.5,
-        shape = 1,
-        stroke = 0.5,
-        color = "gray20"
+    
+    geom_line(
+        size = 0.375, 
+        color = "gray50"
     ) +
+    
+    geom_point(
+        size = 1.125,
+        shape = 16,
+        stroke = 0.5,
+        color = "gray40"
+    ) +
+    
+    geom_smooth(
+        method = "loess",
+        span = 0.5,
+        size = 0.75,
+        alpha = 0.125,
+        color = "dodgerblue3",
+        fill = "dodgerblue"
+    ) +
+    
+    geom_hline(
+        data = barrel_data_4,
+        aes(yintercept = xwoba_mean_player),
+        color = "black",
+        size = 0.65,
+        linetype = 1
+    ) +
+    
     facet_wrap(~player_name, ncol = 5) +
     labs(
-        title = "Mean daily expected weighted on-base average (xwOBA), based on each plate appearance's xwOBA",
+        title = glue("Mean daily expected weighted on-base average (xwOBA), ",
+                     "based on each plate appearance's xwOBA"),
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "xwOBA",
-        caption = 'Note: red line indicates an xwOBA of 0.950, i.e. a "barrel"'
+        caption = 'Note: dashed line indicates an xwOBA of 0.950, i.e. a "barrel"'
     ) +
     coord_cartesian(ylim = c(0, 2), expand = TRUE) +
     theme_minimal() +
