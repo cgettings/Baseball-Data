@@ -89,7 +89,7 @@ every.1.days <- seq(1, num_days, 1)
 
 ## single-day spans ##
 
-back_to <- start_date - every.1.days
+back_to <- sort(start_date - every.1.days)
 
 ## kludge for getting data for just a single day - gets around data download limit ##
 
