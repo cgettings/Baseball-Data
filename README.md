@@ -6,6 +6,7 @@ Code to scrape, clean, organize, etc. Major League Baseball [Statcast data](http
 ### Bryce Harper Nationals Park Home Runs, By Field
 
 ![Bryce Harper Nationals Park Home Runs, By Field](/plots/Bryce_Harper_Nationals_Park_Home_Runs_By_Field.png)
+([Plot code](/code/model_and_plot_code/bryce_harper_home_runs_nationals_park.R))
 
 ### Home Run Rate per Batted Ball, 2008-2018
 
