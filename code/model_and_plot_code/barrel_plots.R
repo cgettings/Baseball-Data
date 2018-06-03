@@ -73,15 +73,19 @@ barrel_count <-
         barrel_data %>% filter(game_year == 2018) %>% select(player_name, batter_id_sc) %>% distinct()
     )
 
+
+########################################################################################
+
+
 barrel_count_players <- 
     barrel_count %>% 
     filter(barrel == 1) %>% 
     select(batter_id_sc) %>% 
     ungroup() %>% 
-    distinct() %>% 
-    slice(1:20)
+    distinct()
 
-barrel_data_2 <- 
+
+barrel_data_2_1 <- 
     barrel_data %>% 
     filter(game_year == 2018) %>% 
     inner_join(., barrel_count_players) %>% 
@@ -96,17 +100,36 @@ barrel_data_2 <-
             na.rm = TRUE)
     )
 
-barrel_data_3 <- 
-    barrel_data_2 %>% 
+
+barrel_data_3_1 <- 
+    barrel_data_2_1 %>% 
     group_by(player_name, game_date) %>% 
     summarise(xwoba_mean_daily = mean(estimated_woba_using_speedangle)) %>% 
     ungroup()
 
-barrel_data_4 <- 
-    barrel_data_2 %>% 
+
+barrel_data_4_1 <- 
+    barrel_data_2_1 %>% 
     group_by(player_name) %>% 
-    summarise(xwoba_mean_player = mean(estimated_woba_using_speedangle, na.rm = TRUE)) %>% 
-    ungroup()
+    summarise(
+        xwoba_mean_player = mean(estimated_woba_using_speedangle, na.rm = TRUE),
+        n = n()
+    ) %>%
+    ungroup() %>% 
+    filter(n >= 100)
+
+
+barrel_data_5_1 <- 
+    barrel_data_4_1 %>% 
+    arrange(-xwoba_mean_player) %>% 
+    filter(row_number() %in% c(1:20))
+
+
+barrel_data_2_1_d <- barrel_data_2_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
+barrel_data_3_1_d <- barrel_data_3_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
+barrel_data_4_1_d <- barrel_data_4_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
+
+overall_xwoba_df_1 <- barrel_data_2_1_d %>% summarise(overall_xwoba = mean(estimated_woba_using_speedangle))
 
 
 ######################
@@ -115,7 +138,7 @@ barrel_data_4 <-
 
 
 plot1 <- 
-    barrel_data_3 %>% 
+    barrel_data_3_1_d %>% 
     ggplot(aes(x = game_date, y = xwoba_mean_daily)) + 
     
     # geom_hline(
@@ -132,7 +155,7 @@ plot1 <-
     ) +
     
     geom_point(
-        data = barrel_data_2,
+        data = barrel_data_2_1_d,
         aes(x = game_date, y = estimated_woba_using_speedangle),
         shape = 1,
         size = 1,
@@ -162,8 +185,16 @@ plot1 <-
     ) +
     
     geom_hline(
-        data = barrel_data_4,
+        data = barrel_data_4_1_d,
         aes(yintercept = xwoba_mean_player),
+        color = "red",
+        size = 0.65,
+        linetype = 1
+    ) +
+    
+    geom_hline(
+        data = overall_xwoba_df_1,
+        aes(yintercept = overall_xwoba),
         color = "black",
         size = 0.65,
         linetype = 1
@@ -172,7 +203,7 @@ plot1 <-
     facet_wrap(~player_name, ncol = 5) +
     labs(
         title = glue("Mean daily expected weighted on-base average (xwOBA), ",
-                     "based on each plate appearance's xwOBA"),
+                     "based on each plate appearance's xwOBA (top-20 / min. 100 PAs)"),
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "xwOBA",
@@ -214,7 +245,7 @@ barrel_count_players <-
     ungroup() %>% 
     distinct()
 
-barrel_data_2 <- 
+barrel_data_2_2 <- 
     barrel_data %>% 
     filter(game_year == 2018) %>% 
     inner_join(., barrel_count_players) %>% 
@@ -230,15 +261,15 @@ barrel_data_2 <-
     )
 
 
-barrel_data_3 <- 
-    barrel_data_2 %>% 
+barrel_data_3_2 <- 
+    barrel_data_2_2 %>% 
     group_by(player_name, game_date) %>% 
     summarise(xwoba_mean_daily = mean(estimated_woba_using_speedangle)) %>% 
     ungroup()
 
 
-barrel_data_4 <- 
-    barrel_data_2 %>% 
+barrel_data_4_2 <- 
+    barrel_data_2_2 %>% 
     group_by(player_name) %>% 
     summarise(
         xwoba_mean_player = mean(estimated_woba_using_speedangle, na.rm = TRUE),
@@ -248,22 +279,19 @@ barrel_data_4 <-
     filter(n >= 100)
 
 
-barrel_data_5 <- 
-    barrel_data_4 %>% 
+barrel_data_5_2 <- 
+    barrel_data_4_2 %>% 
     arrange(-xwoba_mean_player) %>% 
-    filter(row_number() %in% c(1:10, 51:60, 101:110, 151:160))
+    filter(row_number() %in% c(1:5, 51:55, 101:105, 151:155))
 
 
-barrel_data_2_1 <- barrel_data_2 %>% filter(player_name %in% unique(barrel_data_5$player_name))
-barrel_data_3_1 <- barrel_data_3 %>% filter(player_name %in% unique(barrel_data_5$player_name))
-barrel_data_4_1 <- barrel_data_4 %>% filter(player_name %in% unique(barrel_data_5$player_name))
+barrel_data_2_2_d <- barrel_data_2_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
+barrel_data_3_2_d <- barrel_data_3_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
+barrel_data_4_2_d <- barrel_data_4_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
 
 
-overall_xwoba_df <- barrel_data_2_1 %>% summarise(overall_xwoba = mean(estimated_woba_using_speedangle))
+overall_xwoba_df_2 <- barrel_data_2_2 %>% summarise(overall_xwoba = mean(estimated_woba_using_speedangle))
 
-
-
-######################
 
 ######################
 
@@ -271,7 +299,7 @@ overall_xwoba_df <- barrel_data_2_1 %>% summarise(overall_xwoba = mean(estimated
 
 
 plot2 <- 
-    barrel_data_3_1 %>% 
+    barrel_data_3_2_d %>% 
     ggplot(aes(x = game_date, y = xwoba_mean_daily)) + 
     
     # geom_hline(
@@ -288,7 +316,7 @@ plot2 <-
     ) +
     
     geom_point(
-        data = barrel_data_2_1,
+        data = barrel_data_2_2_d,
         aes(x = game_date, y = estimated_woba_using_speedangle),
         shape = 1,
         size = 1,
@@ -318,25 +346,25 @@ plot2 <-
     ) +
     
     geom_hline(
-        data = barrel_data_4_1,
+        data = barrel_data_4_2_d,
         aes(yintercept = xwoba_mean_player),
-        color = "black",
-        size = 0.65,
-        linetype = 1
-    ) +
-    
-    geom_hline(
-        data = overall_xwoba_df,
-        aes(yintercept = overall_xwoba),
         color = "red",
         size = 0.65,
         linetype = 1
     ) +
     
-    facet_wrap(~player_name, ncol = 8) +
+    geom_hline(
+        data = overall_xwoba_df_2,
+        aes(yintercept = overall_xwoba),
+        color = "black",
+        size = 0.65,
+        linetype = 1
+    ) +
+    
+    facet_wrap(~player_name, ncol = 5) +
     labs(
         title = glue("Mean daily expected weighted on-base average (xwOBA), ",
-                     "based on each plate appearance's xwOBA"),
+                     "based on each plate appearance's xwOBA (ranks 1-5, 51-55, 101-105, 151-155 / min. 100 PAs)"),
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "xwOBA",
