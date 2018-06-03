@@ -54,6 +54,10 @@ barrel_data <-
             TRUE ~ 0L))
 
 
+#--------------------------------#
+# Cleaning data ----
+#--------------------------------#
+
 most_recent_day <-
     barrel_data %>%
     pull(game_date) %>% 
@@ -72,9 +76,6 @@ barrel_count <-
         .,
         barrel_data %>% filter(game_year == 2018) %>% select(player_name, batter_id_sc) %>% distinct()
     )
-
-
-########################################################################################
 
 
 barrel_count_players <- 
