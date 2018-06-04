@@ -419,7 +419,7 @@ diamond.plot.field.BH <-
         shape = 21,
         color = "black",
         size = 3.5,
-        alpha = .75
+        alpha = .95
     ) +
     
     ## Field percentages ##
@@ -437,12 +437,19 @@ diamond.plot.field.BH <-
         fontface = "bold"
     ) +
     
-    scale_fill_gradientn(
-        colors = c("gray80", "green2", "yellow", "#FF0000", "#FF4DA7"), 
-        name = "Launch\nSpeed", 
-        limits = c(85, 125),
-        breaks = c(85, 90, 95, 100, 105, 110, 115, 120, 125)
-    ) + 
+    # scale_fill_gradientn(
+    #     colors = c("gray80", "green2", "yellow", "#FF0000", "#FF4DA7"),
+    #     name = "Launch\nSpeed",
+    #     limits = c(90, 115),
+    #     breaks = c(90, 95, 100, 105, 110, 115)
+    # ) +
+    
+    scale_fill_viridis_c(
+        name = "Launch\nSpeed",
+        option = "C",
+        limits = c(90, 115),
+        breaks = c(90, 95, 100, 105, 110, 115)
+    ) +
     
     guides(
         fill = guide_colorbar(
