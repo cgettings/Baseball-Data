@@ -117,7 +117,7 @@ barrel_data_4_1 <-
         n = n()
     ) %>%
     ungroup() %>% 
-    filter(n >= 100)
+    filter(n >= 150)
 
 
 barrel_data_5_1 <- 
@@ -170,10 +170,9 @@ plot1 <-
     ) +
     
     geom_point(
-        size = 1.125,
+        size = 1.25,
         shape = 16,
-        stroke = 0.5,
-        color = "gray40"
+        color = "gray30"
     ) +
     
     geom_smooth(
@@ -204,11 +203,11 @@ plot1 <-
     facet_wrap(~player_name, ncol = 5) +
     labs(
         title = glue("Mean daily expected weighted on-base average (xwOBA), ",
-                     "based on each plate appearance's xwOBA (top-20 / min. 100 PAs)"),
+                     "based on each plate appearance's xwOBA (top-20 / min. 150 PAs)"),
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "xwOBA",
-        caption = 'Note: dashed line indicates an xwOBA of 0.950, i.e. a "barrel"'
+        caption = 'Note: dashed line indicates an xwOBA of 0.950, i.e. a "barrel"; black line is MLB season average xwOBA; red line is player\'s season average xwOBA'
     ) +
     coord_cartesian(ylim = c(0, 2), expand = TRUE) +
     theme_minimal() +
@@ -331,10 +330,9 @@ plot2 <-
     ) +
     
     geom_point(
-        size = 1.125,
+        size = 1.25,
         shape = 16,
-        stroke = 0.5,
-        color = "gray40"
+        color = "gray30"
     ) +
     
     geom_smooth(
@@ -365,11 +363,11 @@ plot2 <-
     facet_wrap(~player_name, ncol = 5) +
     labs(
         title = glue("Mean daily expected weighted on-base average (xwOBA), ",
-                     "based on each plate appearance's xwOBA (ranks 1-5, 51-55, 101-105, 151-155 / min. 100 PAs)"),
+                     "based on each plate appearance's xwOBA (ranks 1-5, 51-55, 101-105, 151-155 / min. 150 PAs)"),
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
         x = "Date",
         y = "xwOBA",
-        caption = 'Note: dashed line indicates an xwOBA of 0.950, i.e. a "barrel"'
+        caption = 'Note: dashed line indicates an xwOBA of 0.950, i.e. a "barrel"; black line is MLB season average xwOBA; red line is player\'s season average xwOBA'
     ) +
     coord_cartesian(ylim = c(0, 2), expand = TRUE) +
     theme_minimal() +
