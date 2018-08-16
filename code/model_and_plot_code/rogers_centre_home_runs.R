@@ -1,7 +1,7 @@
 ######################################################-
 ######################################################-
 ##
-## Bryce Harper home runs @ Nationals Park - PLOT ----
+## Rogers Centre Home Runs ----
 ##
 ######################################################-
 ######################################################-
@@ -26,25 +26,21 @@ library(glue)
 # Loading Nationals Park trace ----
 #-----------------------------------#
 
-nationals.park.df <- read_csv("./data/nationals.park.trace.df.csv")
+rogers.centre.df <- read_csv("./data/rogers.centre.trace.df.csv")
 
 #--------------------------------#
 # Connecting to database ----
 #--------------------------------#
 
-statcast_db <- dbConnect(RSQLite::SQLite(), "./data/statcast_db.sqlite3")
+statcast_db <- dbConnect(SQLite(), "./data/statcast_db.sqlite3")
 
 #--------------------------------#
 # Pulling data from database ----
 #--------------------------------#
 
-harper_data <-
+rogers_centre_data <-
     tbl(statcast_db, "statcast_data_updated") %>%
-    filter(
-        batter_team == "WSH" & 
-            ballpark == "Nationals Park" & 
-            events == "home_run"
-    ) %>%
+    filter(ballpark == "Rogers Centre" & events == "home_run") %>%
     filter(!is.na(events)) %>% 
     select(game_date, 
            game_year,
@@ -56,16 +52,15 @@ harper_data <-
            launch_speed_sc,
            horiz_angle,
            horiz_angle_new_deg
-           ) %>% 
+    ) %>% 
     collect() %>% 
     mutate(
         horiz_angle_3 = case_when(
             horiz_angle_new_deg >= 0  & horiz_angle_new_deg <  30 ~ "Right",
             horiz_angle_new_deg >= 30 & horiz_angle_new_deg <= 60 ~ "Center",
             horiz_angle_new_deg >  60 & horiz_angle_new_deg <= 90 ~ "Left"
-            )
-        ) %>%
-    filter(str_detect(player_name, "Harper"))
+        )
+    )
 
 
 most_recent_day <-
@@ -83,8 +78,8 @@ most_recent_day <-
 #=========================#
 
 
-diamond.plot.field.BH <-
-    harper_data %>% 
+diamond.plot.field.RC <-
+    rogers_centre_data %>% 
     ggplot(
         aes(
             x = 0 + hit_distance_sc * cos(horiz_angle), 
@@ -93,10 +88,10 @@ diamond.plot.field.BH <-
     coord_fixed(xlim = c(0, 500), ylim = c(0, 500), expand = TRUE) +
     
     labs(
-        title = "Bryce Harper Home Runs @ Nationals Park",
+        title = "Home Runs @ The Rogers Centre",
         subtitle = glue(
-            "{nrow(harper_data)} home runs",
-            " ({harper_data %>% drop_na(hit_distance_sc, horiz_angle) %>% nrow()} plotted)",
+            "{nrow(rogers_centre_data)} home runs",
+            " ({rogers_centre_data %>% drop_na(hit_distance_sc, horiz_angle) %>% nrow()} plotted)",
             " as of {format(most_recent_day, '%m/%d/%Y')}")
     ) +
     
@@ -153,8 +148,8 @@ diamond.plot.field.BH <-
     ## Grass ##
     
     annotate(
-        x = nationals.park.df$x,
-        y = nationals.park.df$y,
+        x = rogers.centre.df$x,
+        y = rogers.centre.df$y,
         geom = "polygon",
         fill = "#9ACB9A",
         alpha = 1) +
@@ -221,8 +216,8 @@ diamond.plot.field.BH <-
     
     annotate(
         geom = "path",
-        x = nationals.park.df$x,
-        y = nationals.park.df$y,
+        x = rogers.centre.df$x,
+        y = rogers.centre.df$y,
         color = "black",
         size = 1
     ) +
@@ -276,8 +271,8 @@ diamond.plot.field.BH <-
         geom = "segment",
         x = 0,
         y = 0,
-        xend = c(nationals.park.df$y[2], 0),
-        yend = c(0, nationals.park.df$x[length(nationals.park.df$x) - 1]),
+        xend = c(rogers.centre.df$y[2], 0),
+        yend = c(0, rogers.centre.df$x[length(rogers.centre.df$x) - 1]),
         color = "black",
         size = .75
     ) +
@@ -401,8 +396,8 @@ diamond.plot.field.BH <-
     ) +
     annotate(
         geom = "point",
-        x = c(nationals.park.df$y[2], 0),
-        y = c(0, nationals.park.df$x[10]),
+        x = c(rogers.centre.df$y[2], 0),
+        y = c(0, rogers.centre.df$x[length(rogers.centre.df$x) - 1]),
         shape = 21,
         size = 2,
         color = "black",
@@ -410,7 +405,7 @@ diamond.plot.field.BH <-
     ) +
     
     geom_spoke(
-        data = harper_data,
+        data = rogers_centre_data,
         aes(angle = horiz_angle,
             radius = -hit_distance_sc),
         color = "gray30",
@@ -418,11 +413,11 @@ diamond.plot.field.BH <-
         alpha = .475) +
     
     geom_point(
-        data = harper_data,
+        data = rogers_centre_data,
         aes(fill = launch_speed_sc),
         shape = 21,
         color = "black",
-        size = 3.5,
+        size = 2.75,
         alpha = .95
     ) +
     
@@ -430,7 +425,7 @@ diamond.plot.field.BH <-
     
     annotate(
         geom = "text",
-        label = harper_data %>% 
+        label = rogers_centre_data %>% 
             with(., prop.table(table(horiz_angle_3)) * 100) %>%
             round(digits = 1) %>%
             paste(., "%", sep = "") %>%
@@ -470,30 +465,30 @@ diamond.plot.field.BH <-
             label.position = "left")
     ) +
     
-theme(
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    axis.line = element_blank(),
-    axis.ticks = element_blank(),
-    panel.border = element_rect(color = "black", linetype = "solid", size = .5, fill = NA),
-    strip.background = element_blank(),
-    strip.text = element_text(size = 9),
-    legend.key.size = unit(.75, "cm"),
-    legend.key.height = unit(1.675, "cm"),
-    legend.position = "left",
-    legend.title = element_text(size = 15),
-    legend.text = element_text(size = 10),
-    panel.background = element_rect(fill = "ivory4"), 
-    panel.grid = element_blank(),
-    legend.title.align = 1
-)
+    theme(
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        panel.border = element_rect(color = "black", linetype = "solid", size = .5, fill = NA),
+        strip.background = element_blank(),
+        strip.text = element_text(size = 9),
+        legend.key.size = unit(.75, "cm"),
+        legend.key.height = unit(1.675, "cm"),
+        legend.position = "left",
+        legend.title = element_text(size = 15),
+        legend.text = element_text(size = 10),
+        panel.background = element_rect(fill = "ivory4"), 
+        panel.grid = element_blank(),
+        legend.title.align = 1
+    )
 
 
 ## Saving plots ####
 
 ggsave(
-    plot = diamond.plot.field.BH,
-    "./plots/Bryce_Harper_Nationals_Park_Home_Runs_By_Field.png",
+    plot = diamond.plot.field.RC,
+    "./plots/Rogers_Centre_Home_Runs_By_Field.png",
     width = 10,
     height = 9,
     dpi = 250,
@@ -501,8 +496,8 @@ ggsave(
 )
 
 ggsave(
-    plot = diamond.plot.field.BH,
-    glue("./plots/Bryce_Harper_Nationals_Park_Home_Runs_By_Field_{most_recent_day}.png"),
+    plot = diamond.plot.field.RC,
+    glue("./plots/Rogers_Centre_Home_Runs_By_Field_{most_recent_day}.png"),
     width = 10,
     height = 9,
     dpi = 250,

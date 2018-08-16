@@ -77,7 +77,6 @@ barrel_count <-
         barrel_data %>% filter(game_year == 2018) %>% select(player_name, batter_id_sc) %>% distinct()
     )
 
-
 barrel_count_players <- 
     barrel_count %>% 
     filter(barrel == 1) %>% 
@@ -91,46 +90,62 @@ barrel_data_2_1 <-
     filter(game_year == 2018) %>% 
     inner_join(., barrel_count_players) %>% 
     mutate(player_name = as_factor(player_name)) %>% 
-    replace_na(list(estimated_woba_using_speedangle = 0)) %>% 
-    mutate(
-        player_name = fct_reorder(
-            .f = player_name, 
-            .x = estimated_woba_using_speedangle, 
-            .fun = mean,
-            .desc = TRUE,
-            na.rm = TRUE)
-    )
-
+    replace_na(list(estimated_woba_using_speedangle = 0))
 
 barrel_data_3_1 <- 
     barrel_data_2_1 %>% 
     group_by(player_name, game_date) %>% 
-    summarise(xwoba_mean_daily = mean(estimated_woba_using_speedangle)) %>% 
+    summarise(
+        xwoba_mean_daily = mean(estimated_woba_using_speedangle, na.rm = TRUE),
+        n = n()
+    ) %>%
     ungroup()
-
 
 barrel_data_4_1 <- 
     barrel_data_2_1 %>% 
     group_by(player_name) %>% 
     summarise(
         xwoba_mean_player = mean(estimated_woba_using_speedangle, na.rm = TRUE),
+        xwoba_sd_player = sd(estimated_woba_using_speedangle, na.rm = TRUE),
         n = n()
     ) %>%
-    ungroup() %>% 
-    filter(n >= 150)
-
+    ungroup()
 
 barrel_data_5_1 <- 
     barrel_data_4_1 %>% 
+    filter(n >= 150) %>% 
     arrange(-xwoba_mean_player) %>% 
-    filter(row_number() %in% c(1:20))
+    filter(row_number() %in% c(1:20)) %>% 
+    mutate(
+        player_name = fct_reorder(
+            .f = player_name,
+            .x = xwoba_mean_player,
+            .fun = identity,
+            .desc = TRUE
+        )
+    ) %>% 
+    droplevels()
 
 
-barrel_data_2_1_d <- barrel_data_2_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
-barrel_data_3_1_d <- barrel_data_3_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
-barrel_data_4_1_d <- barrel_data_4_1 %>% filter(player_name %in% unique(barrel_data_5_1$player_name))
+barrel_data_2_1_d <- 
+    semi_join(barrel_data_2_1, barrel_data_5_1, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_1$player_name)))
+    
+barrel_data_3_1_d <- 
+    semi_join(barrel_data_3_1, barrel_data_5_1, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_1$player_name)))
 
-overall_xwoba_df_1 <- barrel_data_2_1_d %>% summarise(overall_xwoba = mean(estimated_woba_using_speedangle))
+barrel_data_4_1_d <- 
+    semi_join(barrel_data_4_1, barrel_data_5_1, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_1$player_name)))
+
+overall_xwoba_df_1 <- 
+    barrel_data_2_1_d %>% 
+    summarise(overall_xwoba = mean(estimated_woba_using_speedangle)) %>% 
+    droplevels()
 
 
 ######################
@@ -152,7 +167,7 @@ plot1 <-
         yintercept = 0.950, 
         color = "black",
         linetype = 2,
-        size = 0.5
+        size = 0.75
     ) +
     
     geom_point(
@@ -160,45 +175,45 @@ plot1 <-
         aes(x = game_date, y = estimated_woba_using_speedangle),
         shape = 1,
         size = 1,
-        color = "gray50",
-        alpha = .7
+        color = "gray60"
     ) +
     
-    geom_line(
-        size = 0.375, 
-        color = "gray50"
+    # geom_line(
+    #     size = 0.375, 
+    #     color = "gray60"
+    # ) +
+    
+    geom_hline(
+        data = barrel_data_5_1,
+        aes(yintercept = xwoba_mean_player),
+        color = "black",
+        size = 0.75,
+        linetype = 1
     ) +
     
     geom_point(
-        size = 1.25,
-        shape = 16,
-        color = "gray30"
+        size = 2,
+        shape = 21,
+        fill = "black",
+        color = "white"
     ) +
     
     geom_smooth(
         method = "loess",
-        span = 0.5,
+        span = 0.3,
         size = 0.75,
         alpha = 0.125,
-        color = "dodgerblue3",
-        fill = "dodgerblue"
+        color = "blue3",
+        fill = "#002D72"
     ) +
     
-    geom_hline(
-        data = barrel_data_4_1_d,
-        aes(yintercept = xwoba_mean_player),
-        color = "red",
-        size = 0.65,
-        linetype = 1
-    ) +
-    
-    geom_hline(
-        data = overall_xwoba_df_1,
-        aes(yintercept = overall_xwoba),
-        color = "black",
-        size = 0.65,
-        linetype = 1
-    ) +
+    # geom_hline(
+    #     data = overall_xwoba_df_1,
+    #     aes(yintercept = overall_xwoba),
+    #     color = "black",
+    #     size = 0.65,
+    #     linetype = 1
+    # ) +
     
     facet_wrap(~player_name, ncol = 5) +
     labs(
@@ -215,15 +230,15 @@ plot1 <-
         axis.text.x = element_text(angle = 0)
     )
 
-ggsave(
-    plot = plot1,
-    "./plots/woba_daily_mean_top20_2018_1.png",
-    width = 14,
-    height = 8,
-    dpi = 250,
-    scale = 1.1
-)
-
+# ggsave(
+#     plot = plot1,
+#     "./plots/woba_daily_mean_top20_2018_1.png",
+#     width = 14,
+#     height = 8,
+#     dpi = 250,
+#     scale = 1.1
+# )
+# 
 ggsave(
     plot = plot1,
     glue("./plots/woba_daily_mean_top20_2018_{most_recent_day}.png"),
@@ -285,13 +300,27 @@ barrel_data_5_2 <-
     filter(row_number() %in% c(1:5, 51:55, 101:105, 151:155))
 
 
-barrel_data_2_2_d <- barrel_data_2_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
-barrel_data_3_2_d <- barrel_data_3_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
-barrel_data_4_2_d <- barrel_data_4_2 %>% filter(player_name %in% unique(barrel_data_5_2$player_name))
-
-
 overall_xwoba_df_2 <- barrel_data_2_2 %>% summarise(overall_xwoba = mean(estimated_woba_using_speedangle))
 
+barrel_data_2_2_d <- 
+    semi_join(barrel_data_2_2, barrel_data_5_2, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_2$player_name)))
+
+barrel_data_3_2_d <- 
+    semi_join(barrel_data_3_2, barrel_data_5_2, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_2$player_name)))
+
+barrel_data_4_2_d <- 
+    semi_join(barrel_data_4_2, barrel_data_5_2, by = "player_name") %>% 
+    droplevels() %>% 
+    mutate(player_name = factor(player_name, levels = levels(barrel_data_5_2$player_name)))
+
+overall_xwoba_df_2 <- 
+    barrel_data_2_2_d %>% 
+    summarise(overall_xwoba = mean(estimated_woba_using_speedangle)) %>% 
+    droplevels()
 
 ######################
 
