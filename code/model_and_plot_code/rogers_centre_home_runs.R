@@ -418,7 +418,7 @@ diamond.plot.field.RC <-
         shape = 21,
         color = "black",
         size = 2.75,
-        alpha = .95
+        alpha = 1
     ) +
     
     ## Field percentages ##

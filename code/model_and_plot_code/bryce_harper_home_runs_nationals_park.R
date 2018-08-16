@@ -423,7 +423,7 @@ diamond.plot.field.BH <-
         shape = 21,
         color = "black",
         size = 3.5,
-        alpha = .95
+        alpha = 1
     ) +
     
     ## Field percentages ##
