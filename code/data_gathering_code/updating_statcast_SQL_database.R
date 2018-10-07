@@ -300,9 +300,12 @@ statcast_update_comb_distinct_clean <-
     select(
         # -error,
         -contains("_deprecated"), # dropping deprecated columns
-        -pos2_person_id) %>%      # dropping strangely empty column
+        # -pos2_person_id           # dropping strangely empty column
+        -contains("fielder_"),
+        -contains("pitcher_")
+        ) %>%      
     
-    rename(pos2_person_id = pos2_person_id_1) %>% 
+    # rename(pos2_person_id = pos2_person_id_1) %>% 
     
     mutate(
         pitch_type      = case_when(pitch_type      == "null" ~ NA_character_, TRUE ~ pitch_type),
@@ -353,15 +356,15 @@ statcast_update_comb_distinct_clean <-
                                   TRUE  ~ release_extension),
         
         game_pk        = case_when(game_pk        == "null" ~ NA_character_, TRUE ~ game_pk),
-        pos1_person_id = case_when(pos1_person_id == "null" ~ NA_character_, TRUE ~ pos1_person_id),
-        pos2_person_id = case_when(pos2_person_id == "null" ~ NA_character_, TRUE ~ pos2_person_id),
-        pos3_person_id = case_when(pos3_person_id == "null" ~ NA_character_, TRUE ~ pos3_person_id),
-        pos4_person_id = case_when(pos4_person_id == "null" ~ NA_character_, TRUE ~ pos4_person_id),
-        pos5_person_id = case_when(pos5_person_id == "null" ~ NA_character_, TRUE ~ pos5_person_id),
-        pos6_person_id = case_when(pos6_person_id == "null" ~ NA_character_, TRUE ~ pos6_person_id),
-        pos7_person_id = case_when(pos7_person_id == "null" ~ NA_character_, TRUE ~ pos7_person_id),
-        pos8_person_id = case_when(pos8_person_id == "null" ~ NA_character_, TRUE ~ pos8_person_id),
-        pos9_person_id = case_when(pos9_person_id == "null" ~ NA_character_, TRUE ~ pos9_person_id),
+        # pos1_person_id = case_when(pos1_person_id == "null" ~ NA_character_, TRUE ~ pos1_person_id),
+        # pos2_person_id = case_when(pos2_person_id == "null" ~ NA_character_, TRUE ~ pos2_person_id),
+        # pos3_person_id = case_when(pos3_person_id == "null" ~ NA_character_, TRUE ~ pos3_person_id),
+        # pos4_person_id = case_when(pos4_person_id == "null" ~ NA_character_, TRUE ~ pos4_person_id),
+        # pos5_person_id = case_when(pos5_person_id == "null" ~ NA_character_, TRUE ~ pos5_person_id),
+        # pos6_person_id = case_when(pos6_person_id == "null" ~ NA_character_, TRUE ~ pos6_person_id),
+        # pos7_person_id = case_when(pos7_person_id == "null" ~ NA_character_, TRUE ~ pos7_person_id),
+        # pos8_person_id = case_when(pos8_person_id == "null" ~ NA_character_, TRUE ~ pos8_person_id),
+        # pos9_person_id = case_when(pos9_person_id == "null" ~ NA_character_, TRUE ~ pos9_person_id),
         release_pos_y  = case_when(release_pos_y  == "null" ~ NA_character_, TRUE ~ release_pos_y),
         
         estimated_ba_using_speedangle = case_when(
@@ -427,15 +430,15 @@ statcast_update_comb_distinct_clean <-
         release_spin_rate               = as.integer(release_spin_rate),
         release_extension               = as.double(release_extension),
         game_pk                         = as.integer(game_pk),
-        pos1_person_id                  = as.integer(pos1_person_id),
-        pos2_person_id                  = as.integer(pos2_person_id),
-        pos3_person_id                  = as.integer(pos3_person_id),
-        pos4_person_id                  = as.integer(pos4_person_id),
-        pos5_person_id                  = as.integer(pos5_person_id),
-        pos6_person_id                  = as.integer(pos6_person_id),
-        pos7_person_id                  = as.integer(pos7_person_id),
-        pos8_person_id                  = as.integer(pos8_person_id),
-        pos9_person_id                  = as.integer(pos9_person_id),
+        # pos1_person_id                  = as.integer(pos1_person_id),
+        # pos2_person_id                  = as.integer(pos2_person_id),
+        # pos3_person_id                  = as.integer(pos3_person_id),
+        # pos4_person_id                  = as.integer(pos4_person_id),
+        # pos5_person_id                  = as.integer(pos5_person_id),
+        # pos6_person_id                  = as.integer(pos6_person_id),
+        # pos7_person_id                  = as.integer(pos7_person_id),
+        # pos8_person_id                  = as.integer(pos8_person_id),
+        # pos9_person_id                  = as.integer(pos9_person_id),
         release_pos_y                   = as.double(release_pos_y),
         estimated_ba_using_speedangle   = as.double(estimated_ba_using_speedangle),
         estimated_woba_using_speedangle = as.double(estimated_woba_using_speedangle),
