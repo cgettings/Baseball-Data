@@ -1,18 +1,18 @@
-######################################################-
-######################################################-
+###########################################################################################-
+###########################################################################################-
 ##
 ## Rogers Centre Home Runs ----
 ##
-######################################################-
-######################################################-
+###########################################################################################-
+###########################################################################################-
 
-#=========================#
+#=========================================================================================#
 # Setting up ----
-#=========================#
+#=========================================================================================#
 
-#-------------------------#
-# Loading libraries ----
-#-------------------------#
+#-----------------------------------------------------------------------------------------#
+# Loading libraries
+#-----------------------------------------------------------------------------------------#
 
 library(tidyverse)
 library(lubridate)
@@ -22,24 +22,24 @@ library(DBI)
 library(RSQLite)
 library(glue)
 
-#-----------------------------------#
-# Loading Nationals Park trace ----
-#-----------------------------------#
+#-----------------------------------------------------------------------------------------#
+# Loading Nationals Park trace
+#-----------------------------------------------------------------------------------------#
 
-rogers.centre.df <- read_csv("./data/rogers.centre.trace.df.csv")
+rogers.centre.df <- read_csv("data/rogers.centre.trace.df.csv")
 
-#--------------------------------#
-# Connecting to database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
+# Connecting to database
+#-----------------------------------------------------------------------------------------#
 
-statcast_db <- dbConnect(SQLite(), "./data/statcast_db.sqlite3")
+statcast_db <- dbConnect(SQLite(), "data/statcast_db_rebuilt.sqlite3")
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Pulling data from database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 rogers_centre_data <-
-    tbl(statcast_db, "statcast_data_updated") %>%
+    tbl(statcast_db, "statcast_data") %>%
     filter(ballpark == "Rogers Centre" & events == "home_run") %>%
     filter(!is.na(events)) %>% 
     select(game_date, 
@@ -47,36 +47,33 @@ rogers_centre_data <-
            bb_type,
            events,
            player_name,
-           batter_id_sc,
+           batter,
            hit_distance_sc,
-           launch_speed_sc,
+           launch_speed,
            horiz_angle,
-           horiz_angle_new_deg
+           horiz_angle_deg
     ) %>% 
     collect() %>% 
     mutate(
         horiz_angle_3 = case_when(
-            horiz_angle_new_deg >= 0  & horiz_angle_new_deg <  30 ~ "Right",
-            horiz_angle_new_deg >= 30 & horiz_angle_new_deg <= 60 ~ "Center",
-            horiz_angle_new_deg >  60 & horiz_angle_new_deg <= 90 ~ "Left"
+            horiz_angle_deg >= 0  & horiz_angle_deg <  30 ~ "Right",
+            horiz_angle_deg >= 30 & horiz_angle_deg <= 60 ~ "Center",
+            horiz_angle_deg >  60 & horiz_angle_deg <= 90 ~ "Left"
         )
     )
 
-
 most_recent_day <-
-    tbl(statcast_db, "statcast_data_updated") %>%
-    select(game_date, obs_date_time_loc) %>% 
-    arrange(desc(obs_date_time_loc)) %>% 
-    head(100) %>% 
+    rogers_centre_data %>%
+    select(game_date) %>%
+    arrange(desc(game_date)) %>%
+    head(1) %>%
     pull(game_date) %>% 
-    extract2(1) %>% 
     as_date()
 
 
-#=========================#
+#=========================================================================================#
 # Plotting ----
-#=========================#
-
+#=========================================================================================#
 
 diamond.plot.field.RC <-
     rogers_centre_data %>% 
@@ -414,7 +411,7 @@ diamond.plot.field.RC <-
     
     geom_point(
         data = rogers_centre_data,
-        aes(fill = launch_speed_sc),
+        aes(fill = launch_speed),
         shape = 21,
         color = "black",
         size = 2.75,
@@ -446,8 +443,8 @@ diamond.plot.field.RC <-
     scale_fill_viridis_c(
         name = "Launch\nSpeed",
         option = "C",
-        limits = c(90, 115),
-        breaks = c(90, 95, 100, 105, 110, 115)
+        limits = c(90, 120),
+        breaks = c(90, 95, 100, 105, 110, 115, 120)
     ) +
     
     guides(
@@ -488,7 +485,7 @@ diamond.plot.field.RC <-
 
 ggsave(
     plot = diamond.plot.field.RC,
-    "./plots/Rogers_Centre_Home_Runs_By_Field.png",
+    "plots/Rogers_Centre_Home_Runs_By_Field.png",
     width = 10,
     height = 9,
     dpi = 250,
@@ -497,12 +494,18 @@ ggsave(
 
 ggsave(
     plot = diamond.plot.field.RC,
-    glue("./plots/Rogers_Centre_Home_Runs_By_Field_{most_recent_day}.png"),
+    glue("plots/Rogers_Centre_Home_Runs_By_Field_{most_recent_day}.png"),
     width = 10,
     height = 9,
     dpi = 250,
     scale = 1
 )
 
-################################################################################
-################################################################################
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# #
+# #                             ---- THIS IS THE END! ----
+# #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

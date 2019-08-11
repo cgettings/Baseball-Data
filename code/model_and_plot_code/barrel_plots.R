@@ -1,18 +1,18 @@
-###########################################-
-###########################################-
+###########################################################################################-
+###########################################################################################-
 ##
 ## Barrels for hot hand - PLOT ----
 ##
-###########################################-
-###########################################-
+###########################################################################################-
+###########################################################################################-
 
-#=========================#
+#=========================================================================================#
 # Setting up ----
-#=========================#
+#=========================================================================================#
 
-#-------------------------#
+#-----------------------------------------------------------------------------------------#
 # Loading libraries ----
-#-------------------------#
+#-----------------------------------------------------------------------------------------#
 
 library(tidyverse)
 library(lubridate)
@@ -20,22 +20,23 @@ library(stringdist)
 library(magrittr)
 library(dbplyr)
 library(DBI)
+library(RSQLite)
 library(glue)
 
-source("./code/functions/se_funs.R")
+source("code/functions/se_funs.R")
 
-#--------------------------------#
-# Connecting to database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
+# Connecting to database
+#-----------------------------------------------------------------------------------------#
 
-statcast_db <- dbConnect(RSQLite::SQLite(), "./data/statcast_db.sqlite3")
+statcast_db <- dbConnect(SQLite(), "data/statcast_db_rebuilt.sqlite3")
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Pulling data from database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 barrel_data <-
-    tbl(statcast_db, "statcast_data_updated") %>%
+    tbl(statcast_db, "statcast_data") %>%
     filter(!is.na(events) & game_type == "R") %>% 
     select(game_date, 
            game_year,
@@ -43,7 +44,7 @@ barrel_data <-
            events,
            type,
            player_name,
-           batter_id_sc,
+           batter,
            estimated_woba_using_speedangle) %>% 
     collect() %>% 
     mutate(
@@ -53,41 +54,43 @@ barrel_data <-
             NA ~ NA_integer_, 
             TRUE ~ 0L))
 
+dbDisconnect(statcast_db)
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Cleaning data ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 most_recent_day <-
     barrel_data %>%
+    select(game_date) %>%
+    arrange(desc(game_date)) %>%
+    head(1) %>%
+    collect() %>%
     pull(game_date) %>% 
-    sort(decreasing = TRUE) %>% 
-    extract2(1) %>% 
     as_date()
-
 
 barrel_count <- 
     barrel_data %>% 
-    filter(game_year == 2018) %>% 
-    group_by(batter_id_sc) %>% 
+    filter(game_year == 2019) %>% 
+    group_by(batter) %>% 
     count(barrel) %>% 
     arrange(-barrel, -n) %>% 
     left_join(
         .,
-        barrel_data %>% filter(game_year == 2018) %>% select(player_name, batter_id_sc) %>% distinct()
+        barrel_data %>% filter(game_year == 2019) %>% select(player_name, batter) %>% distinct()
     )
 
 barrel_count_players <- 
     barrel_count %>% 
     filter(barrel == 1) %>% 
-    select(batter_id_sc) %>% 
+    select(batter) %>% 
     ungroup() %>% 
     distinct()
 
 
 barrel_data_2_1 <- 
     barrel_data %>% 
-    filter(game_year == 2018) %>% 
+    filter(game_year == 2019) %>% 
     inner_join(., barrel_count_players) %>% 
     mutate(player_name = as_factor(player_name)) %>% 
     replace_na(list(estimated_woba_using_speedangle = 0))
@@ -232,7 +235,7 @@ plot1 <-
 
 # ggsave(
 #     plot = plot1,
-#     "./plots/woba_daily_mean_top20_2018_1.png",
+#     "plots/woba_daily_mean_top20_2018_1.png",
 #     width = 14,
 #     height = 8,
 #     dpi = 250,
@@ -241,7 +244,7 @@ plot1 <-
 # 
 ggsave(
     plot = plot1,
-    glue("./plots/woba_daily_mean_top20_2018_{most_recent_day}.png"),
+    glue("plots/woba_daily_mean_top20_2018_{most_recent_day}.png"),
     width = 14,
     height = 8,
     dpi = 250,
@@ -256,13 +259,13 @@ ggsave(
 barrel_count_players <- 
     barrel_count %>% 
     filter(barrel == 1) %>% 
-    select(batter_id_sc) %>% 
+    select(batter) %>% 
     ungroup() %>% 
     distinct()
 
 barrel_data_2_2 <- 
     barrel_data %>% 
-    filter(game_year == 2018) %>% 
+    filter(game_year == 2019) %>% 
     inner_join(., barrel_count_players) %>% 
     mutate(player_name = as_factor(player_name)) %>% 
     replace_na(list(estimated_woba_using_speedangle = 0)) %>% 
@@ -406,7 +409,7 @@ plot2 <-
 
 ggsave(
     plot = plot2,
-    "./plots/woba_daily_mean_1_5,51_55,101_105_2018_1.png",
+    "plots/woba_daily_mean_1_5,51_55,101_105_2018_1.png",
     width = 14,
     height = 8,
     dpi = 250,
@@ -415,12 +418,18 @@ ggsave(
 
 ggsave(
     plot = plot2,
-    glue("./plots/woba_daily_mean_1_5,51_55,101_105_2018_{most_recent_day}.png"),
+    glue("plots/woba_daily_mean_1_5,51_55,101_105_2018_{most_recent_day}.png"),
     width = 14,
     height = 8,
     dpi = 250,
     scale = 1.1
 )
 
-#########################################################################################
-#########################################################################################
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# #
+# #                             ---- THIS IS THE END! ----
+# #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

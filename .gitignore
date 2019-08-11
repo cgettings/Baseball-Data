@@ -54,3 +54,6 @@ plots/woba_3day_mean_top20_2017_1.png
 plots/plot3.png
 
 plots/woba_daily_mean_top20_2018_2018-08-08.png
+data/statcast_db_rebuilt.sqlite3
+data/statcast_db_rebuilt_chunk.sqlite3
+data/statcast_update_comb.rds

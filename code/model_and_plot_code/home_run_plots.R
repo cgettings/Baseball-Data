@@ -1,66 +1,67 @@
-###########################################-
-###########################################-
+###########################################################################################-
+###########################################################################################-
 ##
 ## Home run trends ----
 ##
-###########################################-
-###########################################-
+###########################################################################################-
+###########################################################################################-
 
-#=========================#
+#=========================================================================================#
 # Setting up ----
-#=========================#
+#=========================================================================================#
 
-#-------------------------#
-# Loading libraries ----
-#-------------------------#
+#-----------------------------------------------------------------------------------------#
+# Loading libraries
+#-----------------------------------------------------------------------------------------#
 
-library(lubridate)
-library(stringdist)
-library(magrittr)
-library(dbplyr)
-library(DBI)
-library(tibbletime)
-library(glue)
-library(tidyverse)
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(stringdist))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(dbplyr))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(tibbletime))
+suppressPackageStartupMessages(library(glue))
+suppressPackageStartupMessages(library(tidyverse))
 
-source("./code/functions/se_funs.R")
+source("code/functions/se_funs.R")
 
-#--------------------------------#
-# Connecting to database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
+# Connecting to database
+#-----------------------------------------------------------------------------------------#
 
-statcast_db <- dbConnect(RSQLite::SQLite(), "./data/statcast_db.sqlite3")
+statcast_db <- dbConnect(RSQLite::SQLite(), "data/statcast_db_rebuilt.sqlite3")
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Pulling data from database ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 hr_data <- 
-    tbl(statcast_db, "statcast_data_updated") %>% 
+    tbl(statcast_db, "statcast_data") %>% 
     filter(!is.na(events) & game_type == "R") %>% 
     select(game_date, 
            game_year,
            at_bat_number,
-           # pitch_number,
            events,
            type,
            player_name,
-           batter_id_sc,
-           launch_speed_sc,
-           launch_angle_sc,
+           batter,
+           launch_speed,
+           launch_angle,
            estimated_woba_using_speedangle) %>% 
     collect()
 
 most_recent_day <-
     hr_data %>%
+    select(game_date) %>%
+    arrange(desc(game_date)) %>%
+    head(1) %>%
+    collect() %>%
     pull(game_date) %>% 
-    sort(decreasing = TRUE) %>% 
-    extract2(1) %>% 
     as_date()
 
-#--------------------------------#
-# Calculating home run rate ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
+# Calculating home run rate
+#-----------------------------------------------------------------------------------------#
 
 hr_data_2 <- 
     hr_data %>%
@@ -84,8 +85,8 @@ hr_rate <-
     summarise(
         weekly_hr_per_pa = mean(HR_v_other_pa, na.rm = TRUE),
         weekly_hr_per_bb = mean(HR_v_other_bb, na.rm = TRUE),
-        weekly_launch_speed = mean(launch_speed_sc, na.rm = TRUE),
-        weekly_launch_angle = mean(launch_angle_sc, na.rm = TRUE)
+        weekly_launch_speed = mean(launch_speed, na.rm = TRUE),
+        weekly_launch_angle = mean(launch_angle, na.rm = TRUE)
     ) %>% 
     left_join(
         .,
@@ -106,13 +107,13 @@ hr_rate_yearly <-
     )
 
 
-#================================#
+#=========================================================================================#
 # Plotting home run rate ----
-#================================#
+#=========================================================================================#
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Per plate appearance ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 plot_1 <- 
     hr_rate %>% 
@@ -159,9 +160,9 @@ plot_1 <-
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
     scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y") +
-    scale_y_continuous(breaks = seq(0.01, 0.06, 0.01)) +
+    scale_y_continuous(breaks = seq(0.01, 0.065, 0.01)) +
     theme_minimal() +
-    coord_cartesian(ylim = c(.01, .06)) +
+    coord_cartesian(ylim = c(.01, .065)) +
     theme(
         axis.text.x = element_text(angle = 0),
         panel.grid.minor.x = element_blank(),
@@ -170,7 +171,7 @@ plot_1 <-
 
 ggsave(
     plot = plot_1,
-    glue("./plots/home_run_rate_pa_2008_2018_1.png"),
+    glue("plots/home_run_rate_pa_2008_2019.png"),
     width = 14,
     height = 8,
     dpi = 250
@@ -178,16 +179,16 @@ ggsave(
 
 ggsave(
     plot = plot_1,
-    glue("./plots/home_run_rate_pa_2008_2018_{most_recent_day}.png"),
+    glue("plots/home_run_rate_pa_2008_2019_{most_recent_day}.png"),
     width = 14,
     height = 8,
     dpi = 250
 )
 
 
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 # Per batted ball ----
-#--------------------------------#
+#-----------------------------------------------------------------------------------------#
 
 plot_2 <- 
     hr_rate %>% 
@@ -234,9 +235,9 @@ plot_2 <-
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
     scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y") +
-    scale_y_continuous(breaks = seq(0.01, 0.06, 0.01)) +
+    scale_y_continuous(breaks = seq(0.01, 0.065, 0.01)) +
     theme_minimal() +
-    coord_cartesian(ylim = c(.01, .06)) +
+    coord_cartesian(ylim = c(.01, .065)) +
     theme(
         axis.text.x = element_text(angle = 0),
         panel.grid.minor.x = element_blank(),
@@ -244,7 +245,7 @@ plot_2 <-
 
 ggsave(
     plot = plot_2,
-    glue("./plots/home_run_rate_bb_2008_2018_1.png"),
+    glue("plots/home_run_rate_bb_2008_2019.png"),
     width = 14,
     height = 8,
     dpi = 250
@@ -252,12 +253,17 @@ ggsave(
 
 ggsave(
     plot = plot_2,
-    glue("./plots/home_run_rate_bb_2008_2018_{most_recent_day}.png"),
+    glue("plots/home_run_rate_bb_2008_2019_{most_recent_day}.png"),
     width = 14,
     height = 8,
     dpi = 250
 )
 
 
-##################################
-##################################
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# #
+# #                             ---- THIS IS THE END! ----
+# #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
