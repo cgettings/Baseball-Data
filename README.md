@@ -10,7 +10,7 @@ Is the ball still juiced?
 ![Home Run Rate per Batted Ball, 2008-2019](/plots/home_run_rate_bb_2008_2019_2019-08-09.png)
 ([Plot code](/code/model_and_plot_code/home_run_plots.R))
 
-Probably! See [this](https://www.baseballprospectus.com/news/article/40170/prospectus-feature-mlb-commission-confirms-baseball-changed/) for some reasons to find the above plot suggestive.
+*Yeahhhhhh....*
 
 ### Bryce Harper Nationals Park Home Runs, By Field
 
