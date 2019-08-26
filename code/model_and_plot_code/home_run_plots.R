@@ -160,9 +160,9 @@ plot_1 <-
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
     scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y") +
-    scale_y_continuous(breaks = seq(0.01, 0.06, 0.01)) +
+    scale_y_continuous(breaks = seq(0.01, 0.065, 0.01)) +
     theme_minimal() +
-    coord_cartesian(ylim = c(.01, .06)) +
+    coord_cartesian(ylim = c(.01, .065)) +
     theme(
         axis.text.x = element_text(angle = 0),
         panel.grid.minor.x = element_blank(),
@@ -235,9 +235,9 @@ plot_2 <-
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
     scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y") +
-    scale_y_continuous(breaks = seq(0.01, 0.06, 0.01)) +
+    scale_y_continuous(breaks = seq(0.01, 0.065, 0.01)) +
     theme_minimal() +
-    coord_cartesian(ylim = c(.01, .06)) +
+    coord_cartesian(ylim = c(.01, .065)) +
     theme(
         axis.text.x = element_text(angle = 0),
         panel.grid.minor.x = element_blank(),
