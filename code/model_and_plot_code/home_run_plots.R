@@ -126,7 +126,6 @@ plot_1 <-
         fill = "dodgerblue2",
         alpha = .125
     ) +
-    geom_point(shape = 16, color = "gray40") +
     geom_rect(
         data = hr_rate_yearly,
         aes(
@@ -152,10 +151,11 @@ plot_1 <-
         size = 1,
         inherit.aes = FALSE
     ) +
+    geom_point(shape = 16, color = "gray40") +
     labs(
-        title = "Weekly home runs per batted ball",
+        title = "Weekly home runs per plate appearance",
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
-        x = "Date",
+        x = "Season",
         y = "HR Rate",
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
@@ -164,9 +164,10 @@ plot_1 <-
     theme_minimal() +
     coord_cartesian(ylim = c(.01, .065)) +
     theme(
-        axis.text.x = element_text(angle = 0),
+        axis.text.x = element_text(angle = 0, ),
         panel.grid.minor.x = element_blank(),
-        panel.border = element_rect(color = "black", size = .25, fill = NA))
+        panel.border = element_rect(color = "black", size = .25, fill = NA)
+    )
 
 
 ggsave(
@@ -199,9 +200,9 @@ plot_2 <-
         size = 0.75,
         color = "dodgerblue3",
         fill = "dodgerblue2",
-        alpha = .125
+        alpha = .125, 
+        fullrange = FALSE
     ) +
-    geom_point(shape = 16, color = "gray40") +
     geom_rect(
         data = hr_rate_yearly,
         aes(
@@ -214,6 +215,7 @@ plot_2 <-
         alpha = .175,
         inherit.aes = FALSE
     ) +
+    geom_point(shape = 16, color = "gray40", size = .9) +
     geom_segment(
         data = hr_rate_yearly,
         aes(
@@ -223,23 +225,28 @@ plot_2 <-
             yend = yearly_hr_per_bb
         ),
         color = "red2",
-        alpha = .875,
+        alpha = .75,
         size = 1,
         inherit.aes = FALSE
     ) +
     labs(
         title = "Weekly home runs per batted ball",
         subtitle = glue("As of {format(most_recent_day, '%m/%d/%Y')}"),
-        x = "Date",
+        x = "Season",
         y = "HR Rate",
         caption = "Note: red lines are yearly average; shaded areas are \u00B1 1 S.E."
     ) +
-    scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y") +
-    scale_y_continuous(breaks = seq(0.01, 0.065, 0.01)) +
+    scale_x_date(
+        date_breaks = "year", 
+        date_minor_breaks = "month", 
+        date_labels = "%Y", 
+        limits = as_date(c("2008-01-01", "2019-12-31"))
+    ) +
+    scale_y_continuous(breaks = seq(0.02, 0.06, 0.01)) +
     theme_minimal() +
-    coord_cartesian(ylim = c(.01, .065)) +
+    coord_cartesian(xlim = as_date(c("2008-01-01", "2019-12-31")), ylim = c(.015, .065), expand = FALSE) +
     theme(
-        axis.text.x = element_text(angle = 0),
+        axis.text.x = element_text(hjust = -1),
         panel.grid.minor.x = element_blank(),
         panel.border = element_rect(color = "black", size = .25, fill = NA))
 
@@ -248,7 +255,8 @@ ggsave(
     glue("plots/home_run_rate_bb_2008_2019.png"),
     width = 14,
     height = 8,
-    dpi = 250
+    dpi = 250, 
+    scale = .75
 )
 
 ggsave(
@@ -256,7 +264,8 @@ ggsave(
     glue("plots/home_run_rate_bb_2008_2019_{most_recent_day}.png"),
     width = 14,
     height = 8,
-    dpi = 250
+    dpi = 250, 
+    scale = .75
 )
 
 

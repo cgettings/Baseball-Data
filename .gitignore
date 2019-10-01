@@ -57,3 +57,25 @@ plots/woba_daily_mean_top20_2018_2018-08-08.png
 data/statcast_db_rebuilt.sqlite3
 data/statcast_db_rebuilt_chunk.sqlite3
 data/statcast_update_comb.rds
+CEf1BlSW8AA4DDE.png
+code/model_and_plot_code/content.png
+code/model_and_plot_code/home_run_stats.R
+code/model_and_plot_code/modeling_hits_using_gam.R
+code/model_and_plot_code/modeling_hits_using_gam.R
+code/model_and_plot_code/visualizing splines.R
+NathanTrackmanIntro.ppt
+output/distance_fit_lmer_2.rds
+output/distance_fit_lmer_spline_1.30.rds
+plots/distance_fit_lm_spline_1_plot.png
+plots/distance_fit_lm_spline_2_plot.png
+plots/distance_fit_lm_spline_3_plot.png
+plots/distance_fit_lm_spline_4_plot.png
+plots/distance_fit_lm_spline_5_plot.png
+plots/distance_fit_lm_spline_6_plot.png
+plots/distance_fit_lm_spline_7_plot.png
+plots/distance_fit_lmer_1_plot_-_angle_x_distance.png
+plots/distance_fit_lmer_1_plot_-_speed_x_distance.png
+plots/distance_fit_lmer_2_plot_-_angle_x_distance.png
+plots/distance_fit_lmer_2_plot_-_speed_x_distance.png
+plots/plot_zoom_png.png
+plots/launch speed x hit distance.png
