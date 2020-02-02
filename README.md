@@ -17,7 +17,7 @@ Is the ball still juiced?
 ![Batted ball distance, based on exit speed and launch angle](/plots/angle_x_distance_plot.png)
 ([Plot code](/code/model_and_plot_code/visualizing_distance_for_every_speed_x_angle.R))
 
-### Bryce Harper Nationals Park Home Runs, By Field
+### Rogers Centre Home Runs, By Field
 
-![Bryce Harper Nationals Park Home Runs, By Field](/plots/Bryce_Harper_Nationals_Park_Home_Runs_By_Field.png)
-([Plot code](/code/model_and_plot_code/bryce_harper_home_runs_nationals_park.R))
+![Rogers Centre Home Runs, By Field](/plots/Rogers_Centre_Home_Runs_By_Field.png)
+([Plot code](/code/model_and_plot_code/rogers_centre_home_runs.R))

@@ -36,7 +36,8 @@ statcast_db <- dbConnect(RSQLite::SQLite(), "data/statcast_db_rebuilt.sqlite3")
 #-----------------------------------------------------------------------------------------#
 
 hr_data <- 
-    tbl(statcast_db, "statcast_data") %>% 
+    statcast_db %>% 
+    tbl("statcast_data") %>% 
     filter(!is.na(events) & game_type == "R") %>% 
     select(game_date, 
            game_year,

@@ -41,7 +41,18 @@ suppressPackageStartupMessages(library(glue))
 # Loading functions
 #-----------------------------------------------------------------------------------------#
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Workhorse function
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
 source("code/functions/get_savant_pitches_data.R")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Dealing with errors
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+# Setting a rate backoff, so the server knows I'm playing nicely
 
 rate <- 
     rate_backoff(
@@ -52,12 +63,17 @@ rate <-
         jitter = FALSE
     )
 
+# Automatically retrying requests that fail, with the rate backoff
+
 insistently_get_savant_pitches_data <- 
     insistently(
         get_savant_pitches_data, 
         rate = rate, 
         quiet = FALSE
     )
+
+# In case of an error, return a 1-row tibble with an NA game_date, to avoid stopping for 
+#   row-binding errors
 
 game_date <- NA_character_
 get_game_date <- function(...) identity(game_date)
@@ -77,7 +93,9 @@ statcast_db <- dbConnect(SQLite(), "data/statcast_db_rebuilt.sqlite3")
 # Setting search parameters ----
 #-----------------------------------------------------------------------------------------#
 
-# ---- Finding most recent date in database ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Finding most recent date in database ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 most_recent_day <-
     statcast_db %>% 
@@ -122,6 +140,11 @@ single_days <- single_days_all[which(month(single_days_all) %in% c(3:11))]
 #-----------------------------------------------------------------------------------------#
 # Deleting "update" table
 #-----------------------------------------------------------------------------------------#
+
+# This table saves intermediate results for each loop, so `overwrite` needs to be FALSE, or
+#   else each new loop would overwrite the previous loop. 
+#   
+# So I delete the old version before starting
 
 statcast_db %>% db_drop_table("statcast_update_comb")
 
@@ -253,7 +276,7 @@ statcast_update_comb_distinct <-
 
 
 #-----------------------------------------------------------------------------------------#
-# stopping execution if there are no rows to update
+# Stopping execution if there are no rows to update
 #-----------------------------------------------------------------------------------------#
 
 if (nrow(statcast_update_comb_distinct) == 0) {
@@ -289,14 +312,21 @@ statcast_update_comb_distinct_clean <-
     
     as_tibble() %>% 
     
+    # Removing problematic or unnecessary columns
+    
     select(
         -contains("error"),
         -contains("_deprecated"), 
         -fielder_2
     ) %>%     
     rename(fielder_2 = fielder_2_1) %>% 
+    
+    # Replacing "null" values with proper NAs
+    
     mutate_all(list(~case_when(. == "null" ~ NA_character_, TRUE ~ .))) %>% 
-    type_convert() %>% 
+    type_convert(col_types = cols(.default = col_guess())) %>% 
+    
+    # Producing more fine-grained date columns
     
     mutate(
         game_date = as_date(game_date),
@@ -305,6 +335,8 @@ statcast_update_comb_distinct_clean <-
         day       = day(game_date),
         wday      = wday(game_date)
     ) %>% 
+    
+    # Parsing "sv_id" to produce a proper date
     
     mutate(
         obs_date_time_loc =
@@ -318,6 +350,9 @@ statcast_update_comb_distinct_clean <-
                 tz    = "UTC"
             )
     ) %>% 
+    
+    # Dealing with team and stadium name changes, to make sure teams are grouped together, 
+    #   and stadiums are distinguished
     
     mutate(
         home_team = case_when(home_team == "FLA" ~ "MIA",
@@ -367,6 +402,9 @@ statcast_update_comb_distinct_clean <-
             
         )
     ) %>% 
+    
+    # Standardizing times to UTC, to make sure that events that happened at the same `time` happened 
+    #   at the same time
     
     mutate(
         obs_date_time_utc =
@@ -428,6 +466,8 @@ statcast_update_comb_distinct_clean <-
                 
             )) %>% 
     
+    # Saving copies to datetimes as character strings, for a backup in case of parsing errors
+    
     mutate(
         obs_date_time_loc_chr = as.character(obs_date_time_loc),
         obs_date_time_utc_chr = as.character(obs_date_time_utc)
@@ -440,6 +480,8 @@ statcast_update_comb_distinct_clean <-
         loc_date_round_chr = as.character(loc_date_round),
         utc_date_round_chr = as.character(utc_date_round)
     ) %>% 
+    
+    # Giving pitch types actual names
     
     mutate(
         pitch_type = case_when(
@@ -462,6 +504,8 @@ statcast_update_comb_distinct_clean <-
         )
     ) %>% 
     
+    # Assigning teams to batters and pitchers
+    
     mutate(batter_team = case_when(
         inning_topbot == "bot" ~ home_team,
         inning_topbot == "top" ~ away_team
@@ -477,7 +521,13 @@ statcast_update_comb_distinct_clean <-
     # trigonometric operations
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
     
+    # To turn the weird batted ball coordinates into spray angles
+    
     mutate(
+        
+        # These offsets make home plate (0,0), and come from this blog post by Bill Petti:
+        # https://tht.fangraphs.com/research-notebook-new-format-for-statcast-data-export-at-baseball-savant/
+        
         hc_x.0 = hc_x - 125.42,
         hc_y.0 = 198.27 - hc_y,
         hc_x.new.1 = hc_x.0 * cos(-.75) - hc_y.0 * sin(-.75),

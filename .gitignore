@@ -79,3 +79,8 @@ plots/distance_fit_lmer_2_plot_-_angle_x_distance.png
 plots/distance_fit_lmer_2_plot_-_speed_x_distance.png
 plots/plot_zoom_png.png
 plots/launch speed x hit distance.png
+
+code/functions/get_batters.xml.R
+code/functions/get_batters.xml_do.R
+code/functions/get_game.xml.R
+code/functions/gid2date.R
